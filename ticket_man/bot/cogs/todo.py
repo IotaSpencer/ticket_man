@@ -7,7 +7,7 @@ from discord.ext import commands, bridge
 
 # local
 from ticket_man.loggers import logger
-
+import ticket_man.db
 
 class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):

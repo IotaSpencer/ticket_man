@@ -51,29 +51,29 @@ async def init_loggers():
     file_handler.setFormatter(file_format)
     stream_handler = colorlog.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(stdout_format)
-    discord_handler = DiscordHandler(formatter=discord_format,
-                                     sender_name=f"AgeBot{' beta' if os.environ['AGEBOT_ENV'] == 'dev' else f''}",
-                                     avatar_url="https://images-ext-2.discordapp.net/external/bYpfdlmDpj9gJZ6R7TjNKmbpfEWlhVXfkVj81dCo-30/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/929996821571452969/1ceae3ca5833bd12ee758c6e62cbf45f.png?width=468&height=468",
-                                     regular_message_text='',
-                                     embeds_title=f"Log Message from {f'DevBot' if os.environ['AGEBOT_ENV'] == 'dev' else f'ProdBot'}",
-                                     webhook_url=Configs.hook.outgoing.nenrei_dev
-                                     )
-    telegram_handler = TelegramHandler(formatter=telegram_format,
-                                       token=Configs.hook.telegram.token,
-                                       channel_id=Configs.hook.telegram.chat_id,
-                                       parse_mode=Configs.hook.telegram.parse_mode)
+    # discord_handler = DiscordHandler(formatter=discord_format,
+    #                                  sender_name=f"TicketMaster{' beta' if os.environ['AGEBOT_ENV'] == 'dev' else f''}",
+    #                                  avatar_url="https://images-ext-2.discordapp.net/external/bYpfdlmDpj9gJZ6R7TjNKmbpfEWlhVXfkVj81dCo-30/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/929996821571452969/1ceae3ca5833bd12ee758c6e62cbf45f.png?width=468&height=468",
+    #                                  regular_message_text='',
+    #                                  embeds_title=f"Log Message from {f'DevBot' if os.environ['AGEBOT_ENV'] == 'dev' else f'ProdBot'}",
+    #                                  webhook_url=Configs.hook.outgoing.nenrei_dev
+    #                                  )
+    # telegram_handler = TelegramHandler(formatter=telegram_format,
+    #                                    token=Configs.hook.telegram.token,
+    #                                    channel_id=Configs.hook.telegram.chat_id,
+    #                                    parse_mode=Configs.hook.telegram.parse_mode)
 
     #############################
     #  Add Filters to Handlers  #
     #############################
-    discord_handler.addFilter(markdown_filter)
-    discord_handler.addFilter(emoji_filter)
-    discord_handler.setLevel('INFO')
+    # discord_handler.addFilter(markdown_filter)
+    # discord_handler.addFilter(emoji_filter)
+    # discord_handler.setLevel('INFO')
     stream_handler.addFilter(level_filter)
-    telegram_handler.addFilter(markdown_filter)
-    telegram_handler.addFilter(emoji_filter)
-    for handler in [discord_handler, stream_handler, file_handler, telegram_handler]:
+    # telegram_handler.addFilter(markdown_filter)
+    # telegram_handler.addFilter(emoji_filter)
+    for handler in [stream_handler, file_handler]:
         logger.addHandler(handler)
-    logger.getChild('gateway').handlers = [discord_handler]
-    logger.getChild('login').handlers = [discord_handler]
+    logger.getChild('gateway').handlers = []
+    logger.getChild('login').handlers = []
     logger.info('Loggers initialized')
