@@ -8,9 +8,9 @@ from ticket_man.bot.bot import Bot
 from ticket_man.config import Configs
 
 
-async def start(env) -> None:
+async def start(env: str) -> None:
     """
-
+    :type env: str
     :rtype: object
     """
     token = ''
@@ -32,8 +32,7 @@ async def start(env) -> None:
     # Load Jishaku
     bot.load_extension('ticket_man.bot.cogs.admin')
     bot.load_extension('ticket_man.bot.cogs.extensions')
-    bot.load_extension('ticket_man.bot.cogs.fun')
-    bot.load_extension('ticket_man.bot.cogs.hello')
+    bot.load_extension('ticket_man.bot.cogs.todo')
     bot.load_extension('ticket_man.bot.cogs.join_message')
     bot.load_extension('ticket_man.bot.cogs.owner')
 
