@@ -29,7 +29,7 @@ class Bot(bridge.Bot):
         app_name = app.name
         await self.change_presence(activity=discord.Activity(
             type=discord.ActivityType.playing,
-            name=f"{app_name}"
+            name=f"{app_name} | Help: tm!help -- /hello"
         ), status=discord.Status.online)
 
 # class DevBot(Bot):
