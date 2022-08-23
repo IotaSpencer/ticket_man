@@ -14,11 +14,34 @@ class TODO(commands.Cog, command_attrs=dict(hidden=True)):
         self.bot = bot
         self.ext_path = 'ticket_man.bot.cogs.todo'
 
-    @commands.command()
+    @commands.group()
     @commands.is_owner()
-    async def shutdown(self, ctx):
-        await ctx.bot.close()
-        await ctx.bot.loop.close()
+    async def todo(self, ctx):
+        pass
+
+    @todo.command()
+    @commands.is_owner()
+    async def add(self, ctx, item):
+        """Add a todo item"""
+        pass
+
+    @todo.command()
+    @commands.is_owner()
+    async def remove(self, ctx, num):
+        """Remove a todo item"""
+        pass
+
+    @todo.command()
+    @commands.is_owner()
+    async def list(self, ctx):
+        """List out todo items"""
+        pass
+
+    @todo.command()
+    @commands.is_owner()
+    async def set_increment(self, ctx, num):
+        """Reset the increment back to NUM"""
+        pass
 
 
 def setup(bot):
