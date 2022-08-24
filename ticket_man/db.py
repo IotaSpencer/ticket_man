@@ -12,9 +12,9 @@ from sqlalchemy.orm import sessionmaker
 from ticket_man.config import Configs
 from ticket_man.tables import *
 
+dbcfg = Configs.cfg.db
+
 async def db():
-    engine = create_async_engine(
-        # In-memory sqlite database cannot be accessed from different
-        # threads, use file.
-        f'{expanduser(Configs.cfg.db.url)}')
-    conn = await engine.connect()  # Insert some users
+    engine = create_async_engine(f'{dbcfg.proto}://{dbcfg.user}:{dbcfg.password}@{dbcfg.host}/{dbcfg.database}?charset=utf8mb4')
+    conn = await engine.connect()
+    return conn
