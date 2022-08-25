@@ -4,10 +4,13 @@ import re
 # 3rd party
 import discord
 from discord.ext import commands, bridge
+from sqlalchemy import select
 
 # local
 from ticket_man.loggers import logger
-import ticket_man.db
+from ticket_man.db import db
+from ticket_man.tables import todo
+from sqlalchemy.orm.Query import select_from
 
 class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
@@ -35,8 +38,8 @@ class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def list(self, ctx):
         """List out todo items"""
-        pass
-
+        async with db() as con:
+            con.execute(select_from(todo))
 
     @todo.command()
     @commands.is_owner()
