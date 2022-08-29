@@ -8,3 +8,5 @@ class Todo(Base):
 
     id = Column(Integer, primary_key=True)
     content = Column(String)
+    priority = Column(Integer)
+    completed = Column(Integer)
