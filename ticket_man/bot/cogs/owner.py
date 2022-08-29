@@ -20,6 +20,13 @@ class Owner(commands.Cog, command_attrs=dict(hidden=True)):
         await ctx.bot.close()
         await ctx.bot.loop.close()
 
+    @commands.command()
+    @commands.is_owner()
+    async def delete_all_messages(self, ctx: commands.Context):
+        await ctx.send('Deleting all messages...', delete_after=3)
+        await ctx.channel.purge(limit=100, bulk=True, reason=f'Deleting all messages in {ctx.channel.name}')
+        await ctx.send('Deleted all messages', delete_after=5)
+
 
 def setup(bot):
     bot.add_cog(Owner(bot))
