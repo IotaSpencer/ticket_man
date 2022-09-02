@@ -27,7 +27,12 @@ class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     @todo.command()
     @commands.is_owner()
     async def add(self, ctx, *, flags: TodoAddFlags):
-        """Add a todo content"""
+        """Add a todo item
+        Flags:
+            content
+            priority
+            completed
+        """
         if validate('todo-add', flags):
 
             todo = Todo(content=flags.content, priority=flags.priority, completed=flags.completed)
