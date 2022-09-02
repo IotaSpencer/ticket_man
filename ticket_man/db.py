@@ -12,7 +12,6 @@ from ticket_man.config import Configs
 from ticket_man.tables.todo import *
 
 dbcfg = Configs.cfg.db
-print(f'{dbcfg.proto}://{dbcfg.user}:{dbcfg.password}@{dbcfg.host}/{dbcfg.database}?charset=utf8mb4')
 db_engine = create_async_engine(
     f'{dbcfg.proto}://{dbcfg.user}:{dbcfg.password}@{dbcfg.host}/{dbcfg.database}?charset=utf8mb4&read_timeout=30&write_timeout=30&connect_timeout=30')
 
