@@ -6,7 +6,7 @@ import inspect
 import discord
 from discord.errors import Forbidden
 from discord.ext import commands, bridge
-from discord import Member, TextChannel
+from discord import Member, TextChannel, slash_command
 
 # local
 from ticket_man.bot.helpers.decorators import *
@@ -27,13 +27,16 @@ class JoinMessage(commands.Cog):
             await member.send(
                 f"Hello {member.mention}, welcome to {member.guild.name}! "
                 f"\n\n"
-                f"If you're here to submit a ticket, please see the #ticket-submit channel. "
+                f"If you're here to submit a ticket, please see the #ticket-submit channel or use the {'/ticket'} command. "
 
             )
         except Forbidden:
             pass
             # If they can't be messaged, then fuck them.
 
+    @slash_command(name="whoami")
+    async def whoami(self, ctx):
+        await ctx.send(f"{ctx.author.mention}")
 
 def setup(bot):
     bot.add_cog(JoinMessage(bot))
