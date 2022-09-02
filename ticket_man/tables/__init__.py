@@ -1,5 +1,4 @@
-__all__ = ['todo', 'Base']
-from sqlalchemy.orm import declarative_base
+__all__ = ['todo']
 from . import todo
 # declarative base class
-Base = declarative_base()
+
