@@ -35,6 +35,7 @@ async def start(env: str) -> None:
     bot.load_extension('ticket_man.bot.cogs.admin', store=False)
     bot.load_extension('ticket_man.bot.cogs.extensions', store=False)
     bot.load_extension('ticket_man.bot.cogs.todo', store=False)
+    bot.load_extension('ticket_man.bot.cogs.tickets')
     bot.load_extension('ticket_man.bot.cogs.join_message', store=False)
     bot.load_extension('ticket_man.bot.cogs.owner', store=False)
 
