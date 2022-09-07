@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 
 from ticket_man.config import Configs
 from ticket_man.tables.todo import *
+from ticket_man.tables.tickets import *
 
 dbcfg = Configs.cfg.db
 db_engine = create_async_engine(
