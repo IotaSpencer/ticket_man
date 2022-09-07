@@ -72,7 +72,7 @@ class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     async def list(self, ctx):
         """List out todo items"""
         async with async_session() as s:
-            todos = await s.execute(text('SELECT * FROM todo WHERE completed=true;'))
+            todos = await s.execute(text('SELECT * FROM todo WHERE completed=False;'))
             if todos.rowcount == 0:
                 await ctx.send('No todos')
             for todo in todos:
@@ -158,7 +158,7 @@ class TODO(commands.Cog, command_attrs=dict(hidden=True)):
     async def set_increment(self, ctx, num: int):
         """Reset the increment back to NUM"""
         async with async_session() as session:
-            await session.execute(text('UPDATE todo SET id = id + :num;'), {'num': num})
+            await session.execute(text(f'ALTER TABLE todo AUTO_INCREMENT = {num};'))
             await session.commit()
             await ctx.send(f'Increment reset to {num}')
 
