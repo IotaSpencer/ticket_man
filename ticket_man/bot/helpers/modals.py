@@ -1,11 +1,12 @@
 import discord
 from discord import EmbedField
 
-from ticket_man.bot.helpers.db_abbrevs import get_ticket_type
+from ticket_man.bot.helpers.db_abbrevs import get_ticket_type, submit_ticket
 
 
 class MyModal(discord.ui.Modal):
     def __init__(self, *args, **kwargs) -> None:
+        self.extra_kwargs = kwargs.pop("extra_kwargs", {})
         super().__init__(
             discord.ui.InputText(
                 label="Subject",
@@ -13,7 +14,7 @@ class MyModal(discord.ui.Modal):
             ),
             discord.ui.InputText(
                 label="Body",
-                value="Please describe your issue in detail.",
+                placeholder="Please describe your issue in detail.",
                 style=discord.InputTextStyle.long,
             ),
             *args,
@@ -35,6 +36,7 @@ class MyModal(discord.ui.Modal):
                 EmbedField("Body", self.children[1].value),
             ],
         )
+        await submit_ticket(self.children[0].value, self.children[1].value, self.extra_kwargs["type_"], interaction.user.id)
         await interaction.response.send_message(embed=their_embed, ephemeral=True)
         my_guild = await interaction.client.fetch_guild(497246541053165570)
         ticket_channel = await my_guild.fetch_channel(1008260920763486218)
@@ -53,7 +55,7 @@ class TicketSubmitView(discord.ui.View):
         ],
     )
     async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        modal = MyModal(title="Other Support")
+        modal = MyModal(title="Other Support", extra_kwargs={"type_": select.values[0]})
         type_row = await get_ticket_type(int(select.values[0]))
         modal.title = type_row.type_name
         await interaction.response.send_modal(modal)

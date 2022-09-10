@@ -1,7 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
-from sqlalchemy.orm import declarative_base
 
-Base = declarative_base()
+from ticket_man.utils import Base
 
 
 class Todo(Base):
@@ -11,6 +10,3 @@ class Todo(Base):
     content = Column(String)
     priority = Column(Integer)
     completed = Column(Integer)
-
-
-

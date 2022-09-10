@@ -1,3 +1,6 @@
+from sqlalchemy.orm import declarative_base
+
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
@@ -11,3 +14,6 @@ class dotdict(dict):
                 self[k] = dotdict(v)
             else:
                 self[k] = v
+
+
+Base = declarative_base()
