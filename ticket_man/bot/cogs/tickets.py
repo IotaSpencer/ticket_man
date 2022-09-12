@@ -1,12 +1,12 @@
 # built-in
-from discord import ApplicationContext
 # 3rd party
-from discord.ext.commands import Cog, command
-from discord.commands import slash_command, SlashCommandGroup
+from discord.ext.commands import Cog
+from discord.commands import SlashCommandGroup
+
+from discord import ApplicationContext, Permissions, default_permissions
 # local
 from ticket_man.loggers import logger
-from ticket_man.bot.helpers.modals import MyModal, TicketSubmitView
-from ticket_man.bot.helpers.db_abbrevs import get_ticket_type
+from ticket_man.bot.helpers.ticket_objects.modals import CloseTicketView, CommentTicketView, TicketSubmitView, ViewTicketView
 
 
 class Tickets(Cog, command_attrs=dict(hidden=True)):
@@ -14,14 +14,108 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         self.bot = bot
         self.ext_path = 'ticket_man.bot.cogs.tickets'
 
-    ticket = SlashCommandGroup('ticket')
+    ticket = SlashCommandGroup('ticket', description="Ticket Commands")
+    ticket_admin = ticket.create_subgroup('admin', description="Ticket Admin Commands", default_member_permissions=Permissions.administrator)
 
-    @slash_command(name="ticket")
-    async def ticket(self, ctx: ApplicationContext):
+    @ticket.command(name="create", description="Create a new ticket")
+    async def ticket_create(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
         await ctx.respond(view=TicketSubmitView())
 
-    SlashCommandGroup = ticket.subcommand_group(name="submit", description="Submit a ticket.")
+    @ticket.command(name="view", description="View a ticket")
+    async def ticket_view(self, ctx: ApplicationContext):
+        """View a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond(view=ViewTicketView())
+
+    @ticket.command(name="close", description="Close your open/latest ticket.")
+    async def ticket_close(self, ctx: ApplicationContext):
+        await ctx.defer(ephemeral=True)
+        await ctx.respond(view=CloseTicketView())
+
+    @ticket.command(name="comment", description="Add a comment to a ticket.")
+    async def ticket_comment(self, ctx: ApplicationContext):
+        """Add a comment to an open ticket."""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond(view=CommentTicketView())
+
+    @ticket.command(name="list", description="List your open tickets.")
+    async def ticket_list(self, ctx: ApplicationContext):
+        """List your open tickets."""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="delete")
+    @default_permissions(administrator=True)
+    async def ticket_delete(self, ctx: ApplicationContext):
+        """Delete a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="list")
+    @default_permissions(administrator=True)
+    async def ticket_admin_list(self, ctx: ApplicationContext):
+        """List all open tickets."""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="close")
+    @default_permissions(administrator=True)
+    async def ticket_admin_close(self, ctx: ApplicationContext):
+        """Close a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="comment")
+    @default_permissions(administrator=True)
+    async def ticket_admin_comment(self, ctx: ApplicationContext):
+        """Add a comment to a ticket."""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="open")
+    @default_permissions(administrator=True)
+    async def ticket_admin_open(self, ctx: ApplicationContext):
+        """Open a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="edit")
+    @default_permissions(administrator=True)
+    async def ticket_admin_edit(self, ctx: ApplicationContext):
+        """Edit a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="view")
+    @default_permissions(administrator=True)
+    async def ticket_admin_view(self, ctx: ApplicationContext):
+        """View a ticket (open or closed)"""
+        # TODO: One ticket per page, with a paginator
+        # TODO: Add a button to delete, close, comment, or edit a ticket
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="view-comments")
+    @default_permissions(administrator=True)
+    async def ticket_admin_view_comments(self, ctx: ApplicationContext):
+        """View comments on a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+    @ticket_admin.command(name="list-closed")
+    @default_permissions(administrator=True)
+    async def ticket_admin_list_closed(self, ctx: ApplicationContext):
+        """List all closed tickets."""
+        await ctx.defer(ephemeral=True)
+        await ctx.respond("This command is not yet implemented.")
+
+
+    @Cog.listener()
+    async def on_ready(self):
+        logger.info(f'{self.ext_path} loaded successfully.')
+
+
 
 
 def setup(bot):

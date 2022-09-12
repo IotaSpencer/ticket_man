@@ -41,20 +41,25 @@ async def get_ticket_comments(ticket_id: int) -> ResultProxy:
         return result.scalars().all()
 
 
-async def get_ticket_comment(user_id: int, comment_id: int) -> ResultProxy:
+async def get_ticket_comment(user_id: int, ticket_id, comment_id: int) -> ResultProxy:
     async with async_session() as session:
         result: Result = await session.execute(
-            select(TicketComments).where(TicketComments.user_id == user_id).where(TicketComments.id == comment_id))
+            select(TicketComments).where(TicketComments.user_id == user_id).where(TicketComments.id == comment_id).where(TicketComments.ticket_id == ticket_id))
         return result.scalars().first()
 
 
 async def get_latest_ticket(user_id: int) -> ResultProxy:
+    """Get the latest ticket submitted by a user."""
     async with async_session() as session:
-        result: Result = await session.execute(select(Tickets).order_by(Tickets.id.desc()).limit(1))
+        result: Result = await session.execute(select(Tickets).
+                                               where(Tickets.user_id == user_id).
+                                               order_by(Tickets.id.desc()).
+                                               limit(1))
         return result.scalars().first()
 
 
 async def get_latest_comment(user_id: int) -> ResultProxy:
+    """Get the latest comment submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(
             select(TicketComments).where(TicketComments.user_id == user_id).order_by(TicketComments.id.desc()).limit(1))
@@ -68,12 +73,13 @@ async def get_all_tickets() -> ResultProxy:
 
 
 async def get_all_comments(user_id: int) -> ResultProxy:
+    """Get all comments submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(select(TicketComments).where(TicketComments.user_id == user_id))
         return result.scalars().all()
 
 
-async def get_all_ticket_comments(ticket_id: int) -> ResultProxy:
+async def get_all_ticket_comments(user_id: int, ticket_id: int) -> ResultProxy:
     async with async_session() as session:
-        result: Result = await session.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id))
+        result: Result = await session.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id).where(TicketComments.user_id == user_id))
         return result.scalars().all()
