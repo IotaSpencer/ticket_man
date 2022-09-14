@@ -6,7 +6,7 @@ from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Permissions, default_permissions
 # local
 from ticket_man.loggers import logger
-from ticket_man.bot.helpers.ticket_objects.modals import CloseTicketView, CommentTicketView, TicketSubmitView, ViewTicketView
+from ticket_man.bot.helpers.ticket_objects.embeds import CloseTicketView, CommentTicketView, TicketSubmitView, ViewTicketView
 
 
 class Tickets(Cog, command_attrs=dict(hidden=True)):
@@ -94,7 +94,7 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         # TODO: One ticket per page, with a paginator
         # TODO: Add a button to delete, close, comment, or edit a ticket
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
+
 
     @ticket_admin.command(name="view-comments")
     @default_permissions(administrator=True)

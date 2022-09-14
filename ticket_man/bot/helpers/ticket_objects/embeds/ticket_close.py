@@ -1,0 +1,2 @@
+class CloseTicketView:
+    pass
