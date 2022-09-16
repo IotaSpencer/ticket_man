@@ -1,2 +1,2 @@
-class CloseTicketView:
+class CloseTicketEmbed:
     pass
