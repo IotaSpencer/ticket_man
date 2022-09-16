@@ -1,7 +1,8 @@
 import discord
+from . import EmbedBase
 
 
-class ViewTicketView(discord.ui.View):
+class ViewTicketEmbed(EmbedBase):
     def __init__(self, ticket: discord.Message):
         super().__init__()
         self.ticket = ticket
