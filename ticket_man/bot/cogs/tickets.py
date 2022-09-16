@@ -4,10 +4,13 @@ from discord.ext.commands import Cog
 from discord.commands import SlashCommandGroup
 
 from discord import ApplicationContext, Permissions, default_permissions
+
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_close import CloseTicketView
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketView
 # local
 from ticket_man.loggers import logger
-from ticket_man.bot.helpers.ticket_objects.embeds import CloseTicketView, CommentTicketView, TicketSubmitView, ViewTicketView
-
 
 class Tickets(Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
@@ -94,6 +97,7 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         # TODO: One ticket per page, with a paginator
         # TODO: Add a button to delete, close, comment, or edit a ticket
         await ctx.defer(ephemeral=True)
+
 
 
     @ticket_admin.command(name="view-comments")

@@ -11,7 +11,7 @@ class AdminViewTicketEmbed(EmbedBase):
 
     def get_buttons(self):
         buttons = []
-        for klass in [TicketDeleteButton, TicketCloseButton, TicketOpenButton]:
+        for klass in [TicketDeleteButton, TicketCloseButton, TicketReopenButton]:
             buttons += klass
 
 
@@ -33,7 +33,7 @@ class TicketCloseButton(discord.ui.Button):
         self.custom_id = kwargs.pop('ticket_id', None) + '_close_button'
 
 
-class TicketOpenButton(discord.ui.Button):
+class TicketReopenButton(discord.ui.Button):
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.style = discord.ButtonStyle.danger
