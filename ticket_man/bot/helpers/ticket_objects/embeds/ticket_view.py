@@ -1,5 +1,5 @@
 import discord
-from . import EmbedBase
+from ticket_man.bot.helpers.ticket_objects.base_embed import EmbedBase
 
 
 class ViewTicketEmbed(EmbedBase):

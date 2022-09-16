@@ -5,12 +5,13 @@ from discord.commands import SlashCommandGroup
 
 from discord import ApplicationContext, Permissions, default_permissions
 
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_close import CloseTicketView
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_close import CloseTicketEmbed
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketView
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
 # local
 from ticket_man.loggers import logger
+
 
 class Tickets(Cog, command_attrs=dict(hidden=True)):
     def __init__(self, bot):
@@ -18,7 +19,8 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         self.ext_path = 'ticket_man.bot.cogs.tickets'
 
     ticket = SlashCommandGroup('ticket', description="Ticket Commands")
-    ticket_admin = ticket.create_subgroup('admin', description="Ticket Admin Commands", default_member_permissions=Permissions.administrator)
+    ticket_admin = ticket.create_subgroup('admin', description="Ticket Admin Commands",
+                                          default_member_permissions=Permissions.administrator)
 
     @ticket.command(name="create", description="Create a new ticket")
     async def ticket_create(self, ctx: ApplicationContext):
@@ -29,12 +31,12 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
     async def ticket_view(self, ctx: ApplicationContext):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond(view=ViewTicketView())
+        await ctx.respond(view=ViewTicketEmbed())
 
     @ticket.command(name="close", description="Close your open/latest ticket.")
     async def ticket_close(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
-        await ctx.respond(view=CloseTicketView())
+        await ctx.respond(view=CloseTicketEmbed())
 
     @ticket.command(name="comment", description="Add a comment to a ticket.")
     async def ticket_comment(self, ctx: ApplicationContext):
@@ -98,8 +100,6 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         # TODO: Add a button to delete, close, comment, or edit a ticket
         await ctx.defer(ephemeral=True)
 
-
-
     @ticket_admin.command(name="view-comments")
     @default_permissions(administrator=True)
     async def ticket_admin_view_comments(self, ctx: ApplicationContext):
@@ -114,12 +114,9 @@ class Tickets(Cog, command_attrs=dict(hidden=True)):
         await ctx.defer(ephemeral=True)
         await ctx.respond("This command is not yet implemented.")
 
-
     @Cog.listener()
     async def on_ready(self):
         logger.info(f'{self.ext_path} loaded successfully.')
-
-
 
 
 def setup(bot):
