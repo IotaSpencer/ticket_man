@@ -4,7 +4,7 @@ from discord import Button
 from ticket_man.bot.helpers.ticket_objects.base_embed import EmbedBase
 
 
-class AdminViewTicketEmbed(EmbedBase):
+class AdminOpenTicketEmbed(EmbedBase):
     def __init__(self, *args, **kwargs):
         ticket_id = kwargs.pop('ticket_id', None)
         super().__init__(*args, **kwargs)
