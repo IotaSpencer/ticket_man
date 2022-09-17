@@ -29,6 +29,45 @@ async def submit_comment(content: str, ticket_id: int, user_id: int) -> ResultPr
         return comment
 
 
+async def get_all_user_tickets(user_id: int) -> ResultProxy:
+    async with async_session() as session:
+        result: Result = await session.execute(select(Tickets).where(Tickets.user_id == user_id))
+        return result.scalars().all()
+
+
+async def get_all_ticket_types() -> ResultProxy:
+    async with async_session() as session:
+        result: Result = await session.execute(select(TicketTypes))
+        return result.scalars().all()
+
+
+async def delete_comment(comment_id: int) -> ResultProxy:
+    async with async_session() as session:
+        result: Result = await session.execute(select(TicketComments).where(TicketComments.id == comment_id))
+        comment = result.scalars().first()
+        session.delete(comment)
+        await session.commit()
+        return comment
+
+
+async def close_ticket(ticket_id: int) -> ResultProxy:
+    async with async_session() as session:
+        result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
+        ticket = result.scalars().first()
+        ticket.open = 0
+        await session.commit()
+        return ticket
+
+
+async def open_ticket(ticket_id: int) -> ResultProxy:
+    async with async_session() as session:
+        result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
+        ticket = result.scalars().first()
+        ticket.open = 1
+        await session.commit()
+        return ticket
+
+
 async def get_ticket(ticket_id: int) -> ResultProxy:
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
@@ -44,7 +83,8 @@ async def get_ticket_comments(ticket_id: int) -> ResultProxy:
 async def get_ticket_comment(user_id: int, ticket_id, comment_id: int) -> ResultProxy:
     async with async_session() as session:
         result: Result = await session.execute(
-            select(TicketComments).where(TicketComments.user_id == user_id).where(TicketComments.id == comment_id).where(TicketComments.ticket_id == ticket_id))
+                select(TicketComments).where(TicketComments.user_id == user_id).where(
+                        TicketComments.id == comment_id).where(TicketComments.ticket_id == ticket_id))
         return result.scalars().first()
 
 
@@ -62,7 +102,8 @@ async def get_latest_comment(user_id: int) -> ResultProxy:
     """Get the latest comment submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(
-            select(TicketComments).where(TicketComments.user_id == user_id).order_by(TicketComments.id.desc()).limit(1))
+                select(TicketComments).where(TicketComments.user_id == user_id).order_by(
+                        TicketComments.id.desc()).limit(1))
         return result.scalars().first()
 
 
@@ -81,5 +122,7 @@ async def get_all_comments(user_id: int) -> ResultProxy:
 
 async def get_all_ticket_comments(user_id: int, ticket_id: int) -> ResultProxy:
     async with async_session() as session:
-        result: Result = await session.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id).where(TicketComments.user_id == user_id))
+        result: Result = await session.execute(
+                select(TicketComments).where(TicketComments.ticket_id == ticket_id).where(
+                        TicketComments.user_id == user_id))
         return result.scalars().all()
