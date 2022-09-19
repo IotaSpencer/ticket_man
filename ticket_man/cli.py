@@ -29,8 +29,8 @@ class TicketManCLI(MutableMapping):
 
 
 @click.group()
-@click.option('--debug/--no-debug', default=False, envvar='AGEBOT_DEBUG')
-@click.option('--env', '-e', default='prod', envvar='AGEBOT_ENV',
+@click.option('--debug/--no-debug', default=False, envvar='TICKETMAN_DEBUG')
+@click.option('--env', '-e', default='prod', envvar='TICKETMAN_ENV',
               type=click.Choice(['prod', 'dev'], case_sensitive=False))
 @click.pass_context
 def cli(ctx, debug, env):

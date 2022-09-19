@@ -1,6 +1,6 @@
 import sqlalchemy.engine
 from sqlalchemy import select
-from sqlalchemy.engine import Result, ResultProxy
+from sqlalchemy.engine import Result, ResultProxy, Row, ScalarResult
 
 from ticket_man.db import async_session
 from ticket_man.tables.tickets import TicketComments, TicketTypes, Tickets
@@ -45,7 +45,7 @@ async def delete_comment(comment_id: int) -> ResultProxy:
     async with async_session() as session:
         result: Result = await session.execute(select(TicketComments).where(TicketComments.id == comment_id))
         comment = result.scalars().first()
-        session.delete(comment)
+        await session.delete(comment)
         await session.commit()
         return comment
 
@@ -68,8 +68,20 @@ async def open_ticket(ticket_id: int) -> ResultProxy:
         return ticket
 
 
-async def get_ticket(ticket_id: int) -> ResultProxy:
+async def delete_ticket(ticket_id: int) -> ResultProxy:
     async with async_session() as session:
+        result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
+        ticket = result.scalars().first()
+        await session.delete(ticket)
+        await session.commit()
+        return ticket
+
+
+async def get_ticket(ticket_id: int) -> Row | None:
+    logger.info(f"Getting ticket {ticket_id}")
+    logger.info(f"Expression: {select(Tickets).where(Tickets.id == ticket_id)}")
+    async with async_session() as session:
+        logger.info(f"Session: {session}")
         result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
         return result.scalars().first()
 

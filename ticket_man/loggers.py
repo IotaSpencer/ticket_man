@@ -47,7 +47,7 @@ async def init_loggers():
     #  Add formatters to handlers too  #
     ####################################
 
-    file_handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
+    file_handler = logging.FileHandler(filename=f'/home/ken/.ticket_man/discord.log', encoding='utf-8', mode='w+')
     file_handler.setFormatter(file_format)
     stream_handler = colorlog.StreamHandler(stream=sys.stdout)
     stream_handler.setFormatter(stdout_format)

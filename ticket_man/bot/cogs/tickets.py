@@ -1,10 +1,14 @@
 # built-in
 # 3rd party
+import discord
 from discord.cog import Cog
 from discord.commands import SlashCommandGroup
-from discord import ApplicationContext, Permissions, default_permissions
+from discord import ApplicationContext, Embed, Permissions, default_permissions
 
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_view import AdminViewTicketEmbed
+from ticket_man.bot.helpers.db_abbrevs import get_ticket
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_view import \
+    AdminViewTicketEmbedView, TicketCloseButton, \
+    TicketDeleteButton, TicketOpenButton
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_close import CloseTicketEmbed
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
@@ -99,8 +103,18 @@ class Tickets(Cog):
         # TODO: One ticket per page, with a paginator
         # TODO: Add a button to delete, close, comment, or edit a ticket
         await ctx.defer(ephemeral=True)
-        embed = AdminViewTicketEmbed(ticket_id=ticket_id)
-        await ctx.respond(embed=embed, view=embed.view)
+        ticket = await get_ticket(ticket_id)
+        embed = Embed(title=f"Ticket #{ticket_id}")
+        embed.add_field(name='Ticket Status', value=ticket.open)
+        embed.add_field(name='Ticket Type', value=ticket.type)
+        embed.add_field(name='Ticket Creator', value=ticket.user_id)
+        # embed.add_field(name='Ticket Comments', value=ticket.comments)
+        view = AdminViewTicketEmbedView()
+
+        view.add_item(TicketDeleteButton(ticket_id=ticket_id))
+        view.add_item(TicketCloseButton(ticket_id=ticket_id))
+        view.add_item(TicketOpenButton(ticket_id=ticket_id))
+        await ctx.respond(embed=embed, view=view)
 
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
