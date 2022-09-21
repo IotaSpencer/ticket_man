@@ -1,11 +1,10 @@
 # built-in
 # 3rd party
-import discord
 from discord.cog import Cog
 from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Embed, Permissions, default_permissions
 
-from ticket_man.bot.helpers.db_abbrevs import get_ticket
+from ticket_man.bot.helpers.db_abbrevs import add_test_tickets, get_ticket
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_view import \
     AdminViewTicketEmbedView, TicketCloseButton, \
     TicketDeleteButton, TicketOpenButton
@@ -96,6 +95,12 @@ class Tickets(Cog):
         await ctx.defer(ephemeral=True)
         await ctx.respond("This command is not yet implemented.")
 
+    @ticket_admin.command(name="addtesttickets", description="Add test tickets.")
+    @default_permissions(administrator=True)
+    async def ticket_admin_addtest(self, ctx: ApplicationContext):
+        """Add test tickets."""
+        await ctx.defer(ephemeral=True)
+        await add_test_tickets()
     @ticket_admin.command(name="view", description="View a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_view(self, ctx: ApplicationContext, ticket_id: int):

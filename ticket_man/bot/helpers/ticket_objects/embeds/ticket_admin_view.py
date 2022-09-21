@@ -14,9 +14,9 @@ class AdminViewTicketEmbedView(discord.ui.View):
 
 class TicketDeleteButton(discord.ui.Button):
     def __init__(self, *args, **kwargs):
-        custom_id = str(kwargs.pop('ticket_id', None)) + '_delete_button'
+        self.ticket_id = kwargs.pop('ticket_id')
+        custom_id = f'ticket_{self.ticket_id}_delete_button'
         super().__init__(style=discord.ButtonStyle.danger, label='Delete', emoji='❌', custom_id=custom_id)
-        self.ticket_id = kwargs.pop('ticket_id', None)
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.send_message('Ticket deleted', ephemeral=True)
