@@ -1,32 +1,71 @@
-# Docs: https://docs.pycord.dev/en/master/ext/pages/index.html
-
-# This example demonstrates a standalone cog file with the bot instance in a separate file.
-
-# Note that the below examples use a Slash Command Group in a cog for
-# better organization and doing so is not required for using ext.pages.
-
 import asyncio
 
 import discord
 from discord.ext import pages
 
+from ticket_man.bot.helpers.db_abbrevs import get_all_tickets, get_ticket
+from ticket_man.bot.helpers.ticket_objects.ticket_view_buttons import TicketCloseButton, TicketDeleteButton, \
+    TicketOpenButton
+
 
 class BasePage(pages.Page):
     def __init__(self, *args, **kwargs):
+        self.ticket_id = kwargs.pop('ticket_id', None)
         super().__init__(*args, **kwargs)
 
 
+class TicketPage(BasePage):
+    def __init__(self, ticket, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ticket_id = ticket.id
+        self.ticket = ticket
+        self.embeds = [self.make_embed(ticket)]
+        self.custom_view = self.make_view(ticket)
+
+    def get_ticket(self):
+        return self.ticket
+
+    def make_embed(self):
+        ticket = self.ticket
+        embed = discord.Embed(title=f"Ticket {ticket.id}", color=0x00ff00)
+        embed.add_field(name="Ticket ID", value=f"{ticket.id}", inline=False)
+        embed.add_field(name="Ticket Status (open-1/closed-0)", value=f"{ticket.open}", inline=False)
+        embed.add_field(name="Ticket Author", value=f"{ticket.user_id}", inline=False)
+        embed.add_field(name="Ticket Subject", value=f"{ticket.subject}", inline=False)
+        embed.add_field(name="Ticket Content", value=f"{ticket.content}", inline=False)
+        embed.add_field(name="Ticket Created", value=f"{ticket.created}", inline=False)
+        embed.add_field(name="Ticket Last Updated", value=f"{ticket.last_updated}", inline=False)
+        embed.add_field(name="Ticket Last Updated By", value=f"{ticket.last_updated_by}", inline=False)
+
+        return embed
+
+    def make_view(self):
+        ticket = self.ticket
+        view = discord.ui.View()
+        view.add_item(TicketCloseButton(ticket_id=ticket.id))
+        view.add_item(TicketDeleteButton(ticket_id=ticket.id))
+        view.add_item(TicketOpenButton(ticket_id=ticket.id))
+        return view
+
 
 class TicketPager(object):
-    def __init__(self, bot):
+    def __init__(self, bot, **kwargs):
         self.bot = bot
-        self.pages = [
+        self.pages = kwargs.pop('pages', [])
+        tickets = kwargs.pop('tickets', None)
 
-        ]
+        for ticket in tickets:
+            self.pages.append(TicketPage(ticket=ticket))
 
     @staticmethod
     def make_page(*args, **kwargs):
-        return BasePage(*args, **kwargs)
+        return TicketPage(*args, **kwargs)
+
+    def get_page(self, page_number):
+        return self.pages[page_number]
+
+    def get_page_count(self):
+        return len(self.pages)
 
     def add_page(self, page):
         self.pages.append(page)
@@ -52,7 +91,6 @@ class TicketPager(object):
     def count(self, page):  # returns the number of times a page appears
         return self.pages.count(page)
 
-
     def __repr__(self):
         return f"<{self.__class__.__name__} pages={self.pages}>"
 
@@ -69,7 +107,6 @@ class TicketPager(object):
         return self.pages[index]
 
     def __setitem__(self, index, value):
-
         self.pages[index] = value
 
     def __delitem__(self, index):
@@ -89,11 +126,8 @@ class TicketPager(object):
         return self.pages
 
     def __sub__(self, other):
-        return self.pages - other
+        return self.pages.remove(other)
 
     def __isub__(self, other):
-
         self.pages -= other
         return self.pages
-
-
