@@ -72,7 +72,6 @@ class Tickets(Cog):
             else:
                 await ctx.respond(view=TicketDeleteButton(ticket_id))
 
-
     @ticket_admin.command(name="list", description="List all open tickets.")
     @default_permissions(administrator=True)
     async def ticket_admin_list(self, ctx: ApplicationContext):
@@ -91,6 +90,7 @@ class Tickets(Cog):
         """Close a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         ticket = close_ticket(ticket_id)
+
     @ticket_admin.command(name="comment", description="Add a comment to a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_comment(self, ctx: ApplicationContext):
@@ -105,6 +105,7 @@ class Tickets(Cog):
         await ctx.defer(ephemeral=True)
         ticket = await open_ticket(ticket_id)
         await ctx.respond(f"Ticket {ticket.id} (re)opened.")
+
     @ticket_admin.command(name="edit", description="Edit a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_edit(self, ctx: ApplicationContext):
@@ -118,6 +119,7 @@ class Tickets(Cog):
         """Add test tickets."""
         await ctx.defer(ephemeral=True)
         await add_test_tickets()
+
     @ticket_admin.command(name="view", description="View a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_view(self, ctx: ApplicationContext, ticket_id: int):
@@ -135,7 +137,6 @@ class Tickets(Cog):
         view.add_item(TicketCloseButton(ticket_id=ticket_id))
         view.add_item(TicketOpenButton(ticket_id=ticket_id))
         await ctx.respond(embed=embed, view=view)
-
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
