@@ -5,11 +5,12 @@ from discord.cog import Cog
 from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Embed, Permissions, default_permissions
 
-from ticket_man.bot.helpers.db_abbrevs import add_test_tickets, get_ticket
+from ticket_man.bot.helpers.db_abbrevs import add_test_tickets, close_ticket, get_all_open_tickets, get_ticket, \
+    open_ticket
+from ticket_man.bot.helpers.ticket_objects.pages import TicketPager
 from ticket_man.bot.helpers.ticket_objects.ticket_view_buttons import TicketCloseButton, TicketDeleteButton, \
     TicketOpenButton
 # local
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_close import CloseTicketEmbed
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
@@ -37,9 +38,11 @@ class Tickets(Cog):
         await ctx.respond(view=ViewTicketEmbed())
 
     @ticket.command(name="close", description="Close your open/latest ticket.")
-    async def ticket_close(self, ctx: ApplicationContext):
+    async def ticket_close(self, ctx: ApplicationContext, ticket_id: int = None):
         await ctx.defer(ephemeral=True)
-        await ctx.respond(view=CloseTicketEmbed())
+        view = discord.ui.View()
+        view.add_item(TicketCloseButton(ticket_id=ticket_id))
+        await ctx.respond()
 
     @ticket.command(name="comment", description="Add a comment to a ticket.")
     async def ticket_comment(self, ctx: ApplicationContext):
@@ -55,25 +58,39 @@ class Tickets(Cog):
 
     @ticket_admin.command(name="delete", description="Delete a ticket.")
     @default_permissions(administrator=True)
-    async def ticket_delete(self, ctx: ApplicationContext):
+    async def ticket_delete(self, ctx: ApplicationContext, ticket_id: int):
         """Delete a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
+        ticket = await get_ticket(ticket_id)
+        if ticket.user_id != ctx.author.id:
+            await ctx.respond("You cannot delete a ticket that is not yours.")
+            return
+        else:
+            if ticket is None:
+                await ctx.respond("Ticket not found.")
+                return
+            else:
+                await ctx.respond(view=TicketDeleteButton(ticket_id))
+
 
     @ticket_admin.command(name="list", description="List all open tickets.")
     @default_permissions(administrator=True)
     async def ticket_admin_list(self, ctx: ApplicationContext):
         """List all open tickets."""
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
+        tickets = await get_all_open_tickets()
+        if tickets is None:
+            await ctx.respond("There are no open tickets.")
+            return
+        else:
+            pager = TicketPager(tickets=tickets)
 
     @ticket_admin.command(name="close", description="Close a ticket.")
     @default_permissions(administrator=True)
-    async def ticket_admin_close(self, ctx: ApplicationContext):
+    async def ticket_admin_close(self, ctx: ApplicationContext, ticket_id: int):
         """Close a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
-
+        ticket = close_ticket(ticket_id)
     @ticket_admin.command(name="comment", description="Add a comment to a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_comment(self, ctx: ApplicationContext):
@@ -83,11 +100,11 @@ class Tickets(Cog):
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
     @default_permissions(administrator=True)
-    async def ticket_admin_open(self, ctx: ApplicationContext):
+    async def ticket_admin_open(self, ctx: ApplicationContext, ticket_id: int):
         """Open a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
-
+        ticket = await open_ticket(ticket_id)
+        await ctx.respond(f"Ticket {ticket.id} (re)opened.")
     @ticket_admin.command(name="edit", description="Edit a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_edit(self, ctx: ApplicationContext):
