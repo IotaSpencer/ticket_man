@@ -82,7 +82,9 @@ class Tickets(Cog):
             await ctx.respond("There are no open tickets.")
             return
         else:
-            pager = TicketPager(tickets=tickets)
+            pager = TicketPager(self.bot, tickets=tickets)
+            paginator = pager.paginator()
+            paginator.send(ctx)
 
     @ticket_admin.command(name="close", description="Close a ticket.")
     @default_permissions(administrator=True)
@@ -126,17 +128,13 @@ class Tickets(Cog):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         ticket = await get_ticket(ticket_id)
-        embed = Embed(title=f"Ticket #{ticket_id}")
-        embed.add_field(name='Ticket Status', value=ticket.open)
-        embed.add_field(name='Ticket Type', value=ticket.type)
-        embed.add_field(name='Ticket Creator', value=ticket.user_id)
-        # embed.add_field(name='Ticket Comments', value=ticket.comments)
-        view = discord.ui.View()
+        if ticket is None:
+            await ctx.respond("Ticket not found.")
+            return
+        else:
+            pager = TicketPager(self.bot, tickets=[ticket])
+            pager.paginator()
 
-        view.add_item(TicketDeleteButton(ticket_id=ticket_id))
-        view.add_item(TicketCloseButton(ticket_id=ticket_id))
-        view.add_item(TicketOpenButton(ticket_id=ticket_id))
-        await ctx.respond(embed=embed, view=view)
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)

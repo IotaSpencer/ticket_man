@@ -2,25 +2,24 @@ import asyncio
 
 import discord
 from discord.ext import pages
+from discord.ext.pages import PaginatorButton
+from discord.ui import View
 
 from ticket_man.bot.helpers.db_abbrevs import get_all_tickets, get_ticket
 from ticket_man.bot.helpers.ticket_objects.ticket_view_buttons import TicketCloseButton, TicketDeleteButton, \
     TicketOpenButton
 
 
-class BasePage(pages.Page):
-    def __init__(self, *args, **kwargs):
-        self.ticket_id = kwargs.pop('ticket_id', None)
-        super().__init__(*args, **kwargs)
 
-
-class TicketPage(BasePage):
+class TicketPage:
     def __init__(self, ticket, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.ticket_id = ticket.id
+
         self.ticket = ticket
-        self.embeds = [self.make_embed(ticket)]
-        self.custom_view = self.make_view(ticket)
+        self.ticket_id = kwargs.pop('ticket_id', None)
+        self.ticket_id = ticket.id
+        self.embeds = [self.make_embed()]
+        self.custom_view = self.make_view()
 
     def get_ticket(self):
         return self.ticket
@@ -56,6 +55,48 @@ class TicketPager(object):
 
         for ticket in tickets:
             self.pages.append(TicketPage(ticket=ticket))
+
+    def paginator(self, page_list=None, **kwargs):
+        paginator_class = pages.Paginator(pages=[])
+        pages_ = kwargs.pop('pages', page_list)  # type: list[pages.PageGroup] | list[pages.Page] | list[str] | list[list[discord.Embed] | discord.Embed]
+        show_disabled: bool = kwargs.pop('show_disabled') or True
+        show_indicator: bool = kwargs.pop('show_indicator') or True
+        show_menu: bool = kwargs.pop('show_menu') or False
+        menu_placeholder: str = "Select Page Group"
+        author_check: bool = kwargs.pop('author_check') or True
+        disable_on_timeout: bool = kwargs.pop('disable_on_timeout') or True
+        use_default_buttons: bool = kwargs.pop('use_default_buttons') or True
+        default_button_row: int = kwargs.pop('default_button_row') or 0
+        loop_pages: bool = kwargs.pop('loop_pages') or False
+        custom_view: View | None = kwargs.pop('custom_view') or None
+        timeout: float | None = kwargs.pop('timeout') or 180.0
+        custom_buttons: list[PaginatorButton] | None = kwargs.pop('custom_buttons') or None
+        trigger_on_display: bool | None = kwargs.pop('trigger_on_display') or None
+        if use_default_buttons:
+            paginator_class.add_button(PaginatorButton(emoji='⏮', style=discord.ButtonStyle.green, row=default_button_row,
+                                                       button_type='first'))
+            paginator_class.add_button(PaginatorButton(emoji='◀', style=discord.ButtonStyle.green, row=default_button_row,
+                                                       button_type='back'))
+            paginator_class.add_button(PaginatorButton(button_type='page_indicator', style=discord.ButtonStyle.green, row=default_button_row))
+            paginator_class.add_button(PaginatorButton(emoji='▶', style=discord.ButtonStyle.green, row=default_button_row,
+                                                       button_type='next'))
+            paginator_class.add_button(PaginatorButton(emoji='⏭', style=discord.ButtonStyle.green, row=default_button_row,
+                                                       button_type='last'))
+        paginator_class.pages = pages_ or self.pages
+        paginator_class.show_disabled = show_disabled
+        paginator_class.show_indicator = show_indicator
+        paginator_class.show_menu = show_menu
+        paginator_class.menu_placeholder = menu_placeholder
+        paginator_class.author_check = author_check
+        paginator_class.disable_on_timeout = disable_on_timeout
+        paginator_class.use_default_buttons = use_default_buttons
+        paginator_class.default_button_row = default_button_row
+        paginator_class.loop_pages = loop_pages
+        paginator_class.custom_view = custom_view
+        paginator_class.timeout = timeout
+        paginator_class.custom_buttons = custom_buttons
+        paginator_class.trigger_on_display = trigger_on_display
+        return paginator_class
 
     @staticmethod
     def make_page(*args, **kwargs):

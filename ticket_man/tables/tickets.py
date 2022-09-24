@@ -12,6 +12,9 @@ class Tickets(Base):
     open = Column(Integer)  # 0 - closed, 1 - open
     subject = Column(String)
     content = Column(String)
+    created = Column(DateTime)  #
+    last_updated = Column(DateTime)  # last comment
+    last_updated_by = Column(Integer)  # user_id
     type = Column(Integer, ForeignKey('ticket_types.id'))  # 1 - bug, 2 - feature, 3 - support
     comments = relationship('TicketComments', primaryjoin='Tickets.id==TicketComments.ticket_id',
                             order_by='TicketComments.timestamp', back_populates='ticket')
