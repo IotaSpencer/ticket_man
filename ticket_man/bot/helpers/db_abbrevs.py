@@ -2,7 +2,7 @@ import random
 
 import sqlalchemy.engine
 from sqlalchemy import delete, select
-from sqlalchemy.engine import LegacyCursorResult, Result, ResultProxy, Row, ScalarResult
+from sqlalchemy.engine import FrozenResult, LegacyCursorResult, Result, ResultProxy, Row, ScalarResult
 
 from ticket_man.db import async_session
 from ticket_man.tables.tickets import TicketComments, TicketTypes, Tickets
@@ -44,81 +44,81 @@ async def get_all_ticket_types() -> ResultProxy:
         return result.scalars().all()
 
 
-async def delete_comment(comment_id: int) -> ResultProxy:
+async def delete_comment(comment_id: int) -> ResultProxy | Result | FrozenResult:
     """Delete a comment."""
     async with async_session() as session:
         result: Result = await session.execute(select(TicketComments).where(TicketComments.id == comment_id))
-        comment = result.scalars().first()
+        comment = result.freeze()
         await session.delete(comment)
         await session.commit()
         return comment
 
 
-async def close_ticket(ticket_id: int) -> ResultProxy:
+async def close_ticket(ticket_id: int) -> ResultProxy | FrozenResult:
     """Close a ticket."""
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
-        ticket = result.scalars().first()
+        ticket = result.freeze()
         ticket.open = 0
         await session.commit()
         return ticket
 
 
-async def open_ticket(ticket_id: int) -> ResultProxy:
+async def open_ticket(ticket_id: int) -> Result | FrozenResult:
     """Open a ticket."""
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
-        ticket = result.scalars().first()
+        ticket: FrozenResult = result.freeze()
         ticket.open = 1
         await session.commit()
         return ticket
 
 
-async def delete_ticket(ticket_id: int) -> Result:
+async def delete_ticket(ticket_id: int) -> bool:
     """Delete a ticket."""
     ticket_id = int(ticket_id)
     async with async_session() as session:
         result: Result = await session.execute(delete(Tickets).where(Tickets.id == ticket_id))
-        ticket: Result = result
+
         await session.commit()
-        return ticket
+        return True
 
 
-async def get_ticket(ticket_id: int) -> Row | None:
+async def get_ticket(ticket_id: int) -> Result:
     logger.info(f"Getting ticket {ticket_id}")
     logger.info(f"Expression: {select(Tickets).where(Tickets.id == ticket_id)}")
     async with async_session() as session:
         logger.info(f"Session: {session}")
         result: Result = await session.execute(select(Tickets).where(Tickets.id == ticket_id))
-        return result.scalars().first()
+        return result
 
 
-async def get_ticket_comments(ticket_id: int) -> ResultProxy:
+async def get_ticket_comments(ticket_id: int) -> Result:
     async with async_session() as session:
         result: Result = await session.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id))
-        return result.scalars().all()
+        return result
 
 
-async def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultProxy:
+async def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultProxy | Result | FrozenResult:
     """Get a comment submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(
                 select(TicketComments).where(TicketComments.user_id == user_id).where(
                         TicketComments.id == comment_id).where(TicketComments.ticket_id == ticket_id))
-        return result.scalars().first()
+        return result
 
 
-async def get_latest_ticket(user_id: int) -> ResultProxy:
+async def get_latest_ticket(user_id: int) -> Result | FrozenResult:
     """Get the latest ticket submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).
                                                where(Tickets.user_id == user_id).
                                                order_by(Tickets.id.desc()).
                                                limit(1))
-        return result.scalars().first()
+        return result.freeze()
 
 
-async def close_latest_ticket(user_id: int) -> ResultProxy:
+async def close_latest_ticket(user_id: int) -> Result:
     """Close the latest ticket submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).where(Tickets.user_id == user_id).order_by(
@@ -129,16 +129,16 @@ async def close_latest_ticket(user_id: int) -> ResultProxy:
         return ticket
 
 
-async def get_latest_comment(user_id: int) -> ResultProxy:
+async def get_latest_comment(user_id: int) -> Result:
     """Get the latest comment submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(
                 select(TicketComments).where(TicketComments.user_id == user_id).order_by(
                         TicketComments.id.desc()).limit(1))
-        return result.scalars().first()
+        return result
 
 
-async def get_all_open_tickets() -> ResultProxy:
+async def get_all_open_tickets() -> FrozenResult | LegacyCursorResult | Result:
     """Get all open tickets."""
     async with async_session() as session:
         result: Result = await session.execute(select(Tickets).where(Tickets.open == 1))
