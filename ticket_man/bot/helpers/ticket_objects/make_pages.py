@@ -2,10 +2,23 @@ import discord
 from discord.ext.pages import Page, Paginator
 
 from ticket_man.bot.helpers.db_abbrevs import close_ticket, delete_ticket, get_all_open_tickets, open_ticket
+from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
 from ticket_man.config import Configs
 
 client = discord.Client()
+
+
+class TicketButtonsView(discord.ui.View):
+    def __init__(self, ticket_id):
+        super().__init__()
+        self.ticket_id = ticket_id
+        self.add_item(TicketCloseButton(ticket_id=ticket_id))
+        self.add_item(TicketDeleteButton(ticket_id=ticket_id))
+        self.add_item(TicketOpenButton(ticket_id=ticket_id))
+
+    async def on_timeout(self) -> None:
+        await self.message.delete()
 
 class TicketsRefreshButton(discord.ui.Button):
     def __init__(self):
@@ -33,7 +46,7 @@ class TicketDeleteButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.send_message('Ticket deleted', ephemeral=True)
         logger.info(
-            f"Ticket {self.ticket_id} deleted by {interaction.user.name}#{interaction.user.discriminator} ({interaction.user.id})")
+                f"Ticket {self.ticket_id} deleted by {interaction.user.name}#{interaction.user.discriminator} ({interaction.user.id})")
         await delete_ticket(self.ticket_id)
         await interaction.delete_original_message(delay=2.0)
 
@@ -66,26 +79,28 @@ class TicketOpenButton(discord.ui.Button):
         return ticket
 
 
-def make_embed(ticket):
-    last_updated_by_id = ticket.last_updated_by_id
-    await discord.Bot.get_or_fetch_user(last_updated_by_id)
+async def make_embed(ticket, **kwargs):
+    bot: discord.Bot = kwargs.get('bot', None)
+    if bot is None:
+        raise ValueError('Bot is required to make embed')
+    last_updated_by_id = ticket.last_updated_by
+    last_updated_by_user = await bot.get_or_fetch_user(last_updated_by_id)
+    ticket_author_user = await bot.get_or_fetch_user(ticket.user_id)
     embed = discord.Embed(title=f"Ticket {ticket.id}", color=0x00ff00)
     embed.add_field(name="Ticket ID", value=f"{ticket.id}", inline=False)
     embed.add_field(name="Ticket Status (open-1/closed-0)", value=f"{ticket.open}", inline=False)
-    embed.add_field(name="Ticket Author", value=f"{ticket.user_id}", inline=False)
+    embed.add_field(name="Ticket Author", value=f"{ticket.user_id} ({user_distinct(ticket_author_user)})", inline=False)
     embed.add_field(name="Ticket Subject", value=f"{ticket.subject}", inline=False)
     embed.add_field(name="Ticket Content", value=f"{ticket.content}", inline=False)
     embed.add_field(name="Ticket Created", value=f"{discord.utils.format_dt(ticket.created, 'F')}", inline=False)
-    embed.add_field(name="Ticket Last Updated", value=f"{discord.utils.format_dt(ticket.last_updated, 'F')}", inline=False)
-    embed.add_field(name="Ticket Last Updated By", value=f"{ticket.last_updated_by}", inline=False)
+    embed.add_field(name="Ticket Last Updated", value=f"{discord.utils.format_dt(ticket.last_updated, 'F')}",
+                    inline=False)
+    embed.add_field(name="Ticket Last Updated By",
+                    value=f"{ticket.last_updated_by} ({user_distinct(last_updated_by_user)})", inline=False)
 
     return embed
 
 
 def make_view(ticket):
-    view = discord.ui.View()
-    view.add_item(TicketsRefreshButton())
-    view.add_item(TicketCloseButton(ticket_id=ticket.id))
-    view.add_item(TicketDeleteButton(ticket_id=ticket.id))
-    view.add_item(TicketOpenButton(ticket_id=ticket.id))
+    view = TicketButtonsView(ticket_id=ticket.id)
     return view

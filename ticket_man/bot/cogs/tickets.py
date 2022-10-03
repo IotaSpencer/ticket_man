@@ -90,7 +90,7 @@ class Tickets(Cog):
             first_page = discord.Embed(title="Open Tickets", timestamp=arw.now('US/Eastern').datetime, description="All open tickets are listed on the following pages.")
             pages.append(Page(embeds=[first_page]))
             for ticket in tickets:
-                pages.append(Page(embeds=[make_embed(ticket)], custom_view=make_view(ticket)))
+                pages.append(Page(embeds=[await make_embed(ticket, bot=ctx.bot)], custom_view=make_view(ticket)))
             pager = Paginator(pages=pages)
             await pager.respond(ctx.interaction, ephemeral=True)
 
