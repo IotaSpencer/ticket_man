@@ -1,19 +1,21 @@
 # built-in
+import datetime
 # 3rd party
+import arrow as arw
 import discord.ui
 from discord.cog import Cog
 from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Embed, Permissions, default_permissions
+from discord.ext.pages import Page, Paginator
 
 from ticket_man.bot.helpers.db_abbrevs import add_test_tickets, close_ticket, get_all_open_tickets, get_ticket, \
     open_ticket
-from ticket_man.bot.helpers.ticket_objects.pages import TicketPager
-from ticket_man.bot.helpers.ticket_objects.ticket_view_buttons import TicketCloseButton, TicketDeleteButton, \
-    TicketOpenButton
+
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
+from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_embed, make_view
 from ticket_man.loggers import logger
 
 
@@ -54,6 +56,8 @@ class Tickets(Cog):
     async def ticket_list(self, ctx: ApplicationContext):
         """List your open tickets."""
         await ctx.defer(ephemeral=True)
+        # TODO: only list most recent 5 tickets
+
         await ctx.respond("This command is not yet implemented.")
 
     @ticket_admin.command(name="delete", description="Delete a ticket.")
@@ -82,9 +86,13 @@ class Tickets(Cog):
             await ctx.respond("There are no open tickets.")
             return
         else:
-            pager = TicketPager(self.bot, tickets=tickets)
-            paginator = pager.paginator()
-            paginator.send(ctx)
+            pages = []
+            first_page = discord.Embed(title="Open Tickets", timestamp=arw.now('US/Eastern').datetime, description="All open tickets are listed on the following pages.")
+            pages.append(Page(embeds=[first_page]))
+            for ticket in tickets:
+                pages.append(Page(embeds=[make_embed(ticket)], custom_view=make_view(ticket)))
+            pager = Paginator(pages=pages)
+            await pager.respond(ctx.interaction, ephemeral=True)
 
     @ticket_admin.command(name="close", description="Close a ticket.")
     @default_permissions(administrator=True)
@@ -132,9 +140,9 @@ class Tickets(Cog):
             await ctx.respond("Ticket not found.")
             return
         else:
-            pager = TicketPager(self.bot, tickets=[ticket])
-            pager.paginator()
-
+            page = ticket
+            paginator = Paginator([])
+            paginator.pages.append(Page(embeds=[make_embed(ticket)], custom_view=make_view(ticket, paginator)))
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
