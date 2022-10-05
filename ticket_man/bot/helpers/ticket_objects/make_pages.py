@@ -6,18 +6,17 @@ from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
 from ticket_man.config import Configs
 
-client = discord.Client()
-
 
 class TicketButtonsView(discord.ui.View):
     def __init__(self, ticket_id):
-        super().__init__()
+        super().__init__(timeout=20)
         self.ticket_id = ticket_id
         self.add_item(TicketCloseButton(ticket_id=ticket_id))
         self.add_item(TicketDeleteButton(ticket_id=ticket_id))
         self.add_item(TicketOpenButton(ticket_id=ticket_id))
 
     async def on_timeout(self) -> None:
+        logger.debug(f"TicketButtonsView timed out for ticket {self.ticket_id}")
         await self.message.delete()
 
 class TicketsRefreshButton(discord.ui.Button):
@@ -29,12 +28,12 @@ class TicketsRefreshButton(discord.ui.Button):
         pages = []
         tickets = await get_all_open_tickets()
         for ticket in tickets:
-            pages.append(Page(embeds=[make_embed(ticket)], custom_view=make_view(ticket)))
+            pages.append(Page(embeds=[await make_embed(ticket)], custom_view=make_view(ticket)))
 
         paginator = Paginator(pages=pages)
         await paginator.respond(interaction)
         await interaction.delete_original_message(delay=3.0)
-        await interaction.followup.send('Refreshed!', ephemeral=True, delete_after=5)
+        await interaction.followup.send('Refreshed!', ephemeral=False, delete_after=5)
 
 
 class TicketDeleteButton(discord.ui.Button):

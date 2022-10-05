@@ -37,7 +37,7 @@ class SubmitTicketModal(discord.ui.Modal):
                 ],
         )
         await submit_ticket(self.children[0].value, self.children[1].value, self.extra_kwargs["type_"],
-                            interaction.user.id)
+                            interaction.user.id,)
         await interaction.response.send_message(embed=their_embed, ephemeral=True)
         my_guild = await interaction.client.fetch_guild(497246541053165570)
         ticket_channel = await my_guild.fetch_channel(1008260920763486218)

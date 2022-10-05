@@ -8,14 +8,18 @@ from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Embed, Permissions, default_permissions
 from discord.ext.pages import Page, Paginator
 
-from ticket_man.bot.helpers.db_abbrevs import add_test_tickets, close_ticket, get_all_open_tickets, get_ticket, \
-    open_ticket
+from ticket_man.bot.helpers.db_abbrevs import \
+    add_test_tickets, close_ticket, get_all_open_tickets, get_last_5_tickets_by_user, get_latest_ticket, \
+    get_ticket, get_user_ticket, open_ticket, delete_ticket, get_ticket_comment, \
+    get_ticket_comments, get_all_ticket_comments, get_all_user_tickets, \
+    get_all_comments, get_all_tickets
 
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
-from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_embed, make_view
+from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_embed, \
+    make_view
 from ticket_man.loggers import logger
 
 
@@ -25,7 +29,7 @@ class Tickets(Cog):
         self.ext_path = 'ticket_man.bot.cogs.tickets'
 
     ticket = SlashCommandGroup('ticket', description="Ticket Commands")
-    ticket_admin = ticket.create_subgroup('admin', description="Ticket Admin Commands",
+    ticket_admin = SlashCommandGroup('ticket_admin', description="Ticket Admin Commands",
                                           default_member_permissions=Permissions(administrator=True))
 
     @ticket.command(name="create", description="Create a new ticket")
@@ -34,14 +38,21 @@ class Tickets(Cog):
         await ctx.respond(view=TicketSubmitView())
 
     @ticket.command(name="view", description="View a ticket")
-    async def ticket_view(self, ctx: ApplicationContext):
+    async def ticket_view(self, ctx: ApplicationContext, ticket_id: int):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond(view=ViewTicketEmbed())
+        ticket = await get_user_ticket(ticket_id, ctx.author.id)
+        f_ticket = ticket.freeze()
+        if ticket is None:
+            await ctx.respond(f"Ticket {ticket_id} not found")
+            return
+        pager = Paginator(pages=[Page(embeds=[await make_embed(ticket, bot=ctx.bot)])])
+        await pager.respond(ctx.interaction, ephemeral=True)
 
     @ticket.command(name="close", description="Close your open/latest ticket.")
-    async def ticket_close(self, ctx: ApplicationContext, ticket_id: int = None):
+    async def ticket_close(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
+        ticket = await get_latest_ticket(ctx.author.id)
         view = discord.ui.View()
         view.add_item(TicketCloseButton(ticket_id=ticket_id))
         await ctx.respond()
@@ -56,12 +67,14 @@ class Tickets(Cog):
     async def ticket_list(self, ctx: ApplicationContext):
         """List your open tickets."""
         await ctx.defer(ephemeral=True)
-        # TODO: only list most recent 5 tickets
-
+        tickets = await get_last_5_tickets_by_user(ctx.author.id)
+        pages = []
+        for ticket in tickets:
+            pages.append(make_embed(ticket))
+        paginator = Paginator(pages=pages, timeout=60)
         await ctx.respond("This command is not yet implemented.")
 
     @ticket_admin.command(name="delete", description="Delete a ticket.")
-    @default_permissions(administrator=True)
     async def ticket_delete(self, ctx: ApplicationContext, ticket_id: int):
         """Delete a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
@@ -80,19 +93,20 @@ class Tickets(Cog):
     @default_permissions(administrator=True)
     async def ticket_admin_list(self, ctx: ApplicationContext):
         """List all open tickets."""
-        await ctx.defer(ephemeral=True)
+        await ctx.defer(ephemeral=False)
         tickets = await get_all_open_tickets()
         if tickets is None:
             await ctx.respond("There are no open tickets.")
             return
         else:
             pages = []
-            first_page = discord.Embed(title="Open Tickets", timestamp=arw.now('US/Eastern').datetime, description="All open tickets are listed on the following pages.")
+            first_page = discord.Embed(title="Open Tickets", timestamp=arw.now('US/Eastern').datetime,
+                                       description="All open tickets are listed on the following pages.")
             pages.append(Page(embeds=[first_page]))
             for ticket in tickets:
                 pages.append(Page(embeds=[await make_embed(ticket, bot=ctx.bot)], custom_view=make_view(ticket)))
             pager = Paginator(pages=pages)
-            await pager.respond(ctx.interaction, ephemeral=True)
+            await pager.respond(ctx.interaction, ephemeral=False)
 
     @ticket_admin.command(name="close", description="Close a ticket.")
     @default_permissions(administrator=True)
@@ -118,7 +132,7 @@ class Tickets(Cog):
 
     @ticket_admin.command(name="edit", description="Edit a ticket.")
     @default_permissions(administrator=True)
-    async def ticket_admin_edit(self, ctx: ApplicationContext):
+    async def ticket_admin_edit(self, ctx: ApplicationContext, ticket_id: int):
         """Edit a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         await ctx.respond("This command is not yet implemented.")
@@ -146,7 +160,7 @@ class Tickets(Cog):
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
-    async def ticket_admin_view_comments(self, ctx: ApplicationContext):
+    async def ticket_admin_view_comments(self, ctx: ApplicationContext, ticket_id: int):
         """View comments on a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         await ctx.respond("This command is not yet implemented.")
