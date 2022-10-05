@@ -3,7 +3,7 @@ import random
 import sqlalchemy.engine
 from sqlalchemy import delete, select
 from sqlalchemy.engine import FrozenResult, LegacyCursorResult, Result, ResultProxy, Row, ScalarResult
-
+import arrow as arw
 from ticket_man.db import async_session
 from ticket_man.tables.tickets import TicketComments, TicketTypes, Tickets
 from ticket_man.loggers import logger
@@ -17,7 +17,7 @@ async def get_ticket_type(type_: int) -> sqlalchemy.engine.ScalarResult:
 
 async def submit_ticket(subject: str, content: str, type_: int, user_id: int) -> ResultProxy:
     async with async_session() as session:
-        ticket = Tickets(subject=subject, content=content, type=type_, user_id=user_id, open=1)
+        ticket = Tickets(subject=subject, content=content, type=type_, user_id=user_id, open=1, last_updated_by=user_id, created=arw.now('US/Eastern').datetime)
         session.add(ticket)
         await session.commit()
         return ticket
@@ -26,6 +26,7 @@ async def submit_ticket(subject: str, content: str, type_: int, user_id: int) ->
 async def submit_comment(content: str, ticket_id: int, user_id: int) -> ResultProxy:
     async with async_session() as session:
         comment = TicketComments(content=content, ticket_id=ticket_id, user_id=user_id)
+
         session.add(comment)
         await session.commit()
         return comment
@@ -93,6 +94,20 @@ async def get_ticket(ticket_id: int) -> Result:
         return result
 
 
+async def get_ticket_comment_by_id(comment_id: int) -> Result:
+    async with async_session() as session:
+        result: Result = await session.execute(select(TicketComments).where(TicketComments.id == comment_id))
+        return result
+
+
+async def get_user_ticket(ticket_id: int, user_id: int) -> Result:
+    """Get a ticket submitted by a user."""
+    async with async_session() as session:
+        result: Result = await session.execute(
+                select(Tickets).where(Tickets.user_id == user_id).where(Tickets.id == ticket_id))
+        return result
+
+
 async def get_ticket_comments(ticket_id: int) -> Result:
     async with async_session() as session:
         result: Result = await session.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id))
@@ -116,6 +131,14 @@ async def get_latest_ticket(user_id: int) -> Result | FrozenResult:
                                                order_by(Tickets.id.desc()).
                                                limit(1))
         return result.freeze()
+
+
+async def get_last_5_tickets_by_user(user_id: int) -> Result:
+    """Get the last 5 tickets submitted by a user."""
+    async with async_session() as session:
+        result: Result = await session.execute(select(Tickets).where(Tickets.user_id == user_id).order_by(
+                Tickets.id.desc()).limit(5))
+        return result
 
 
 async def close_latest_ticket(user_id: int) -> Result:
