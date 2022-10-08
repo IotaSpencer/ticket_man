@@ -50,7 +50,7 @@ class Tickets(Cog):
         await pager.respond(ctx.interaction, ephemeral=True)
 
     @ticket.command(name="close", description="Close your open/latest ticket.")
-    async def ticket_close(self, ctx: ApplicationContext):
+    async def ticket_close(self, ctx: ApplicationContext, ticket_id: int = None):
         await ctx.defer(ephemeral=True)
         ticket = await get_latest_ticket(ctx.author.id)
         view = discord.ui.View()
@@ -70,9 +70,9 @@ class Tickets(Cog):
         tickets = await get_last_5_tickets_by_user(ctx.author.id)
         pages = []
         for ticket in tickets:
-            pages.append(make_embed(ticket))
+            pages.append(Page(embeds=[await make_embed(ticket, bot=ctx.bot)]))
         paginator = Paginator(pages=pages, timeout=60)
-        await ctx.respond("This command is not yet implemented.")
+        await paginator.respond(ctx.interaction, ephemeral=True)
 
     @ticket_admin.command(name="delete", description="Delete a ticket.")
     async def ticket_delete(self, ctx: ApplicationContext, ticket_id: int):
