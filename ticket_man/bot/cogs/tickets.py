@@ -42,7 +42,7 @@ class Tickets(Cog):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         ticket = await get_user_ticket(ticket_id, ctx.author.id)
-        f_ticket = ticket.freeze()
+        ticket = ticket.fetchone()
         if ticket is None:
             await ctx.respond(f"Ticket {ticket_id} not found")
             return
