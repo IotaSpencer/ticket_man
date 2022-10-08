@@ -1,8 +1,10 @@
 import random
+from typing import List
 
 import sqlalchemy.engine
-from sqlalchemy import delete, select
-from sqlalchemy.engine import FrozenResult, LegacyCursorResult, Result, ResultProxy, Row, ScalarResult
+from sqlalchemy import delete, select, update
+from sqlalchemy.engine import FrozenResult, LegacyCursorResult, Result, ResultProxy, Row, ScalarResult, \
+    ChunkedIteratorResult
 import arrow as arw
 from ticket_man.db import async_session
 from ticket_man.tables.tickets import TicketComments, TicketTypes, Tickets
@@ -17,7 +19,7 @@ async def get_ticket_type(type_: int) -> sqlalchemy.engine.ScalarResult:
 
 async def submit_ticket(subject: str, content: str, type_: int, user_id: int) -> ResultProxy:
     async with async_session() as session:
-        ticket = Tickets(subject=subject, content=content, type=type_, user_id=user_id, open=1, last_updated_by=user_id, created=arw.now('US/Eastern').datetime)
+        ticket = Tickets(subject=subject, content=content, type=type_, user_id=user_id, open=1, last_updated_by=user_id, created=arw.now('US/Eastern').datetime, last_updated=arw.now('US/Eastern').datetime)
         session.add(ticket)
         await session.commit()
         return ticket
@@ -26,6 +28,11 @@ async def submit_ticket(subject: str, content: str, type_: int, user_id: int) ->
 async def submit_comment(content: str, ticket_id: int, user_id: int) -> ResultProxy:
     async with async_session() as session:
         comment = TicketComments(content=content, ticket_id=ticket_id, user_id=user_id)
+
+        update_stmt = update(Tickets)\
+            .where(Tickets.id == ticket_id)\
+            .values(last_updated=arw.now('US/Eastern').datetime, last_updated_by=user_id)
+        result = await session.execute(update_stmt)
 
         session.add(comment)
         await session.commit()
@@ -82,7 +89,7 @@ async def delete_ticket(ticket_id: int) -> bool:
         result: Result = await session.execute(delete(Tickets).where(Tickets.id == ticket_id))
 
         await session.commit()
-        return True
+        return result.rowcount
 
 
 async def get_ticket(ticket_id: int) -> Result:
@@ -104,8 +111,10 @@ async def get_user_ticket(ticket_id: int, user_id: int) -> Result:
     """Get a ticket submitted by a user."""
     async with async_session() as session:
         result: Result = await session.execute(
-                select(Tickets).where(Tickets.user_id == user_id).where(Tickets.id == ticket_id))
-        return result
+                select(Tickets)
+                .where(Tickets.user_id == user_id)
+                .where(Tickets.id == ticket_id))
+        return result.scalars().all()
 
 
 async def get_ticket_comments(ticket_id: int) -> Result:
@@ -133,12 +142,16 @@ async def get_latest_ticket(user_id: int) -> Result | FrozenResult:
         return result.freeze()
 
 
-async def get_last_5_tickets_by_user(user_id: int) -> Result:
+async def get_last_5_tickets_by_user(user_id: int) -> list[Row]:
     """Get the last 5 tickets submitted by a user."""
     async with async_session() as session:
-        result: Result = await session.execute(select(Tickets).where(Tickets.user_id == user_id).order_by(
-                Tickets.id.desc()).limit(5))
-        return result
+        result: ChunkedIteratorResult = await session.execute(
+            select(Tickets)
+            .where(Tickets.user_id == user_id)
+            .order_by(Tickets.id.desc())
+            .limit(5)
+        )
+        return result.all()
 
 
 async def close_latest_ticket(user_id: int) -> Result:
@@ -193,7 +206,6 @@ async def get_all_ticket_comments(user_id: int, ticket_id: int) -> ResultProxy:
 
 async def add_test_tickets():
     """Add test tickets to the database."""
-    tickets = []
     types = [1, 2, 3]
     numbers = '0123456789'
     async with async_session() as session:
