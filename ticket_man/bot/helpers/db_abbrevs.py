@@ -1,5 +1,5 @@
 import random
-from typing import List
+from typing import Any, List
 
 import sqlalchemy.engine
 from sqlalchemy import delete, select, update
@@ -25,7 +25,7 @@ async def submit_ticket(subject: str, content: str, type_: int, user_id: int) ->
         return ticket
 
 
-async def submit_comment(content: str, ticket_id: int, user_id: int) -> ResultProxy:
+async def submit_comment(content: str, ticket_id: int, user_id: int) -> list[TicketComments | Any]:
     async with async_session() as session:
         comment = TicketComments(content=content, ticket_id=ticket_id, user_id=user_id)
 
@@ -33,10 +33,10 @@ async def submit_comment(content: str, ticket_id: int, user_id: int) -> ResultPr
             .where(Tickets.id == ticket_id)\
             .values(last_updated=arw.now('US/Eastern').datetime, last_updated_by=user_id)
         result = await session.execute(update_stmt)
-
+        rows_updated = result.rowcount
         session.add(comment)
         await session.commit()
-        return comment
+        return [comment, rows_updated]
 
 
 async def get_all_user_tickets(user_id: int) -> ResultProxy:
@@ -114,7 +114,7 @@ async def get_user_ticket(ticket_id: int, user_id: int) -> Result:
                 select(Tickets)
                 .where(Tickets.user_id == user_id)
                 .where(Tickets.id == ticket_id))
-        return result.scalars().all()
+        return result
 
 
 async def get_ticket_comments(ticket_id: int) -> Result:
