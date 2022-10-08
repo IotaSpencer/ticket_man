@@ -6,7 +6,7 @@ from ticket_man.utils import Base
 
 class Tickets(Base):
     __tablename__ = 'tickets'
-
+    autoload_with = Base.metadata.bind
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer)
     open = Column(Integer)  # 0 - closed, 1 - open
