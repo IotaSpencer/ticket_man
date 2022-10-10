@@ -6,7 +6,7 @@ asyncmy==0.2.5
 attrs==22.1.0
 colorlog==6.7.0
 jishaku==2.3.0
-git+https://github.com/IotaSpencer/logging-disgram#egg=logging-disgram
+git+ssh://git@github.com/IotaSpencer/logging-disgram#egg=logging-disgram
 multidict==6.0.2
 omegaconf~=2.2.3
 pip==22.2.2
@@ -16,4 +16,5 @@ setuptools==65.4.1
 wheel==0.37.1
 pymysql==1.0.2
 anyio~=3.6.1
-SQLAlchemy==1.4.41
+#SQLAlchemy==1.4.41
+git+ssh://git@github.com/SQLAlchemy/SQLAlchemy#egg=SQLAlchemy
