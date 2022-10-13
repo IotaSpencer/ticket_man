@@ -1,12 +1,16 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Table
 
+from ticket_man import db
 from ticket_man.utils import Base
 
 
 class Todo(Base):
-    __tablename__ = 'todo'
-
-    id = Column(Integer, primary_key=True)
-    content = Column(String)
-    priority = Column(Integer)
-    completed = Column(Integer)
+    __table__ = Table(
+            'todo',
+            Base.metadata,
+            Column('id', Integer, primary_key=True),
+            Column('content', String),
+            Column('priority', Integer),
+            Column('completed', Integer),
+            autoload_with=db.db_engine
+    )

@@ -11,7 +11,6 @@ from ticket_man.bot.helpers.flag_validators import validate
 # local
 from ticket_man.loggers import logger
 from ticket_man.tables.todo import Todo
-from ticket_man.db import async_session
 from ticket_man.bot.helpers.flag_converters import TodoAddFlags
 
 

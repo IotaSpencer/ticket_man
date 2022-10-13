@@ -41,7 +41,7 @@ class Tickets(Cog):
     async def ticket_view(self, ctx: ApplicationContext, ticket_id: int):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        ticket = await get_user_ticket(ticket_id, ctx.author.id)
+        ticket = get_user_ticket(ticket_id, ctx.author.id)
         ticket = ticket.fetchone()
         if ticket is None:
             await ctx.respond(f"Ticket {ticket_id} not found")
@@ -52,7 +52,7 @@ class Tickets(Cog):
     @ticket.command(name="close", description="Close your open/latest ticket.")
     async def ticket_close(self, ctx: ApplicationContext, ticket_id: int = None):
         await ctx.defer(ephemeral=True)
-        ticket = await get_latest_ticket(ctx.author.id)
+        ticket = get_latest_ticket(ctx.author.id)
         view = discord.ui.View()
         view.add_item(TicketCloseButton(ticket_id=ticket_id))
         await ctx.respond()
@@ -67,7 +67,7 @@ class Tickets(Cog):
     async def ticket_list(self, ctx: ApplicationContext):
         """List your open tickets."""
         await ctx.defer(ephemeral=True)
-        tickets = await get_last_5_tickets_by_user(ctx.author.id)
+        tickets = get_last_5_tickets_by_user(ctx.author.id)
         pages = []
         for ticket in tickets:
             pages.append(Page(embeds=[await make_embed(ticket, bot=ctx.bot)]))
@@ -78,7 +78,7 @@ class Tickets(Cog):
     async def ticket_delete(self, ctx: ApplicationContext, ticket_id: int):
         """Delete a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        ticket = await get_ticket(ticket_id)
+        ticket = get_ticket(ticket_id)
         if ticket.user_id != ctx.author.id:
             await ctx.respond("You cannot delete a ticket that is not yours.")
             return
@@ -94,7 +94,7 @@ class Tickets(Cog):
     async def ticket_admin_list(self, ctx: ApplicationContext):
         """List all open tickets."""
         await ctx.defer(ephemeral=False)
-        tickets = await get_all_open_tickets()
+        tickets = get_all_open_tickets()
         if tickets is None:
             await ctx.respond("There are no open tickets.")
             return
@@ -127,7 +127,7 @@ class Tickets(Cog):
     async def ticket_admin_open(self, ctx: ApplicationContext, ticket_id: int):
         """Open a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        ticket = await open_ticket(ticket_id)
+        ticket = open_ticket(ticket_id)
         await ctx.respond(f"Ticket {ticket.id} (re)opened.")
 
     @ticket_admin.command(name="edit", description="Edit a ticket.")
@@ -149,14 +149,14 @@ class Tickets(Cog):
     async def ticket_admin_view(self, ctx: ApplicationContext, ticket_id: int):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        ticket = await get_ticket(ticket_id)
+        ticket = get_ticket(ticket_id)
         if ticket is None:
             await ctx.respond("Ticket not found.")
             return
         else:
             page = ticket
             paginator = Paginator([])
-            paginator.pages.append(Page(embeds=[make_embed(ticket)], custom_view=make_view(ticket, paginator)))
+            paginator.pages.append(Page(embeds=[await make_embed(ticket)], custom_view=make_view(ticket)))
 
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
