@@ -82,7 +82,6 @@ async def make_embed(ticket, **kwargs):
     bot: discord.Bot = kwargs.get('bot', None)
     if bot is None:
         raise ValueError('Bot is required to make embed')
-    logger.info(f"{ticket}")
     last_updated_by_id = ticket.last_updated_by
     last_updated_by_user = await bot.get_or_fetch_user(last_updated_by_id)
     ticket_author_user = await bot.get_or_fetch_user(ticket.user_id)

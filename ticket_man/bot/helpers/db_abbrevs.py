@@ -108,14 +108,14 @@ def get_ticket_comment_by_id(comment_id: int) -> Result:
         return result
 
 
-def get_user_ticket(ticket_id: int, user_id: int) -> Result:
+def get_user_ticket(ticket_id: int, user_id: int) -> list:
     """Get a ticket submitted by a user."""
     with session() as sess:
         result: Result = sess.execute(
                 select(Tickets)
                 .where(Tickets.user_id == user_id)
                 .where(Tickets.id == ticket_id))
-        return result
+        return result.scalars().all()
 
 
 def get_ticket_comments(ticket_id: int) -> Result:
@@ -133,14 +133,14 @@ def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultP
         return result
 
 
-def get_latest_ticket(user_id: int) -> Result | FrozenResult:
+def get_latest_ticket(user_id: int):
     """Get the latest ticket submitted by a user."""
     with session() as sess:
-        result: Result = sess.execute(select(Tickets).
+        result = sess.execute(select(Tickets).
                                       where(Tickets.user_id == user_id).
                                       order_by(Tickets.id.desc()).
                                       limit(1))
-        return result.freeze()
+        return result.scalars().all()
 
 
 def get_last_5_tickets_by_user(user_id: int) -> list[Row]:
@@ -152,7 +152,7 @@ def get_last_5_tickets_by_user(user_id: int) -> list[Row]:
                 .order_by(Tickets.id.desc())
                 .limit(5)
         )
-        return result.all()
+        return result.scalars().all()
 
 
 def close_latest_ticket(user_id: int) -> Result:
@@ -181,6 +181,13 @@ def get_all_open_tickets() -> FrozenResult | Result:
         result: Result = sess.execute(select(Tickets).where(Tickets.open == 1))
         return result.scalars().all()
 
+
+def get_all_user_open_tickets(user_id: int) -> FrozenResult | Result:
+    """Get all open tickets submitted by a user."""
+    with session() as sess:
+        result: Result = sess.execute(
+                select(Tickets).where(Tickets.user_id == user_id).where(Tickets.open == 1))
+        return result.scalars().all()
 
 def get_all_tickets() -> ResultProxy:
     """Get all tickets."""

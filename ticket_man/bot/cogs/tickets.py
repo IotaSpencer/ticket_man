@@ -12,7 +12,7 @@ from ticket_man.bot.helpers.db_abbrevs import \
     add_test_tickets, close_ticket, get_all_open_tickets, get_last_5_tickets_by_user, get_latest_ticket, \
     get_ticket, get_user_ticket, open_ticket, delete_ticket, get_ticket_comment, \
     get_ticket_comments, get_all_ticket_comments, get_all_user_tickets, \
-    get_all_comments, get_all_tickets
+    get_all_comments, get_all_tickets, get_all_user_open_tickets
 
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
@@ -35,6 +35,11 @@ class Tickets(Cog):
     @ticket.command(name="create", description="Create a new ticket")
     async def ticket_create(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
+        tickets = get_all_user_open_tickets(ctx.author.id)
+        if len(tickets) > 0:
+            await ctx.respond(f"You already have an open ticket! Please close it before opening a new one.",
+                              ephemeral=True)
+            return
         await ctx.respond(view=TicketSubmitView())
 
     @ticket.command(name="view", description="View a ticket")
@@ -42,7 +47,7 @@ class Tickets(Cog):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         ticket = get_user_ticket(ticket_id, ctx.author.id)
-        ticket = ticket.fetchone()
+        ticket = ticket[0]
         if ticket is None:
             await ctx.respond(f"Ticket {ticket_id} not found")
             return
@@ -50,12 +55,13 @@ class Tickets(Cog):
         await pager.respond(ctx.interaction, ephemeral=True)
 
     @ticket.command(name="close", description="Close your open/latest ticket.")
-    async def ticket_close(self, ctx: ApplicationContext, ticket_id: int = None):
+    async def ticket_close(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
         ticket = get_latest_ticket(ctx.author.id)
+        ticket_id = ticket[0]
         view = discord.ui.View()
         view.add_item(TicketCloseButton(ticket_id=ticket_id))
-        await ctx.respond()
+        await ctx.respond(view=view)
 
     @ticket.command(name="comment", description="Add a comment to a ticket.")
     async def ticket_comment(self, ctx: ApplicationContext):
