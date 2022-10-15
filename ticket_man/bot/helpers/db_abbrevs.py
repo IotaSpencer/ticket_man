@@ -63,11 +63,13 @@ def delete_comment(comment_id: int) -> ResultProxy | Result | FrozenResult:
         return comment
 
 
-def close_ticket(ticket_id: int) -> ResultProxy | FrozenResult:
+def close_ticket(ticket_id: int) -> Row | None:
     """Close a ticket."""
     with session() as sess:
         result: Result = sess.execute(select(Tickets).where(Tickets.id == ticket_id))
-        ticket = result.freeze()
+        ticket = result.one_or_none()
+        logger.info(f"Ticket: {ticket}")
+        ticket = sess.execute(select(Tickets).where(Tickets.id == ticket_id))
         ticket.open = 0
         sess.commit()
         return ticket

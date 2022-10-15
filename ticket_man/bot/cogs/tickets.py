@@ -58,10 +58,10 @@ class Tickets(Cog):
     async def ticket_close(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
         ticket = get_latest_ticket(ctx.author.id)
-        ticket_id = ticket[0]
+        ticket_id = ticket[0].id
         view = discord.ui.View()
         view.add_item(TicketCloseButton(ticket_id=ticket_id))
-        await ctx.respond(view=view)
+        await ctx.respond(view=view, ephemeral=True)
 
     @ticket.command(name="comment", description="Add a comment to a ticket.")
     async def ticket_comment(self, ctx: ApplicationContext):
