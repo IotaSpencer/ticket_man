@@ -30,7 +30,7 @@ class Tickets(Cog):
 
     ticket = SlashCommandGroup('ticket', description="Ticket Commands")
     ticket_admin = SlashCommandGroup('ticket_admin', description="Ticket Admin Commands",
-                                          default_member_permissions=Permissions(administrator=True))
+                                     default_member_permissions=Permissions(administrator=True))
 
     @ticket.command(name="create", description="Create a new ticket")
     async def ticket_create(self, ctx: ApplicationContext):
@@ -54,14 +54,17 @@ class Tickets(Cog):
         pager = Paginator(pages=[Page(embeds=[await make_embed(ticket, bot=ctx.bot)])])
         await pager.respond(ctx.interaction, ephemeral=True)
 
-    @ticket.command(name="close", description="Close your open/latest ticket.")
+    @ticket.command(name="close", description="Close your latest open ticket.")
     async def ticket_close(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
         ticket = get_latest_ticket(ctx.author.id)
-        ticket_id = ticket[0].id
-        view = discord.ui.View()
-        view.add_item(TicketCloseButton(ticket_id=ticket_id))
-        await ctx.respond(view=view, ephemeral=True)
+        if ticket is None:
+            await ctx.respond(f"You don't have any open tickets!")
+            return
+
+        closed = close_ticket(ticket)
+        if closed:
+            await ctx.respond(f"Closed ticket {ticket.id}")
 
     @ticket.command(name="comment", description="Add a comment to a ticket.")
     async def ticket_comment(self, ctx: ApplicationContext):

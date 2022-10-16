@@ -59,8 +59,9 @@ class TicketCloseButton(discord.ui.Button):
                          **kwargs)
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.delete_original_message(delay=2.0)
-        ticket = close_ticket(self.ticket_id)
+        await interaction.delete_original_response(delay=2.0)
+        fticket = close_ticket(self.ticket_id)
+        ticket = fticket.one()
         return await interaction.response.send_message(f"Ticket {ticket.id} closed", ephemeral=True)
 
 

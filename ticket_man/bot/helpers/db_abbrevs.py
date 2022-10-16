@@ -1,11 +1,14 @@
 import random
 from typing import Any, List
 
+import sqlalchemy
 import sqlalchemy.engine
 from sqlalchemy import delete, select, update
 from sqlalchemy.engine import FrozenResult, Result, ResultProxy, Row, ScalarResult, \
     ChunkedIteratorResult
 import arrow as arw
+from sqlalchemy.orm import Session
+
 from ticket_man.db import session
 from ticket_man.tables.tickets import TicketComments, TicketTypes, Tickets
 from ticket_man.loggers import logger
@@ -63,16 +66,12 @@ def delete_comment(comment_id: int) -> ResultProxy | Result | FrozenResult:
         return comment
 
 
-def close_ticket(ticket_id: int) -> Row | None:
+def close_ticket(ticket_id: int) -> bool:
     """Close a ticket."""
-    with session() as sess:
-        result: Result = sess.execute(select(Tickets).where(Tickets.id == ticket_id))
-        ticket = result.one_or_none()
-        logger.info(f"Ticket: {ticket}")
-        ticket = sess.execute(select(Tickets).where(Tickets.id == ticket_id))
-        ticket.open = 0
+    with session() as sess:  # type: Session
+        ticket = sess.execute(update(Tickets).where(Tickets.id == ticket_id).values(open=0)).scalar_one()
         sess.commit()
-        return ticket
+        return True
 
 
 def open_ticket(ticket_id: int) -> Result | FrozenResult:
@@ -138,10 +137,11 @@ def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultP
 def get_latest_ticket(user_id: int):
     """Get the latest ticket submitted by a user."""
     with session() as sess:
-        result = sess.execute(select(Tickets).
-                                      where(Tickets.user_id == user_id).
-                                      order_by(Tickets.id.desc()).
-                                      limit(1))
+        result = sess.execute(
+                select(Tickets).
+                where(Tickets.user_id == user_id).
+                order_by(Tickets.id.desc()).
+                limit(1))
         return result.scalars().all()
 
 
@@ -190,6 +190,7 @@ def get_all_user_open_tickets(user_id: int) -> FrozenResult | Result:
         result: Result = sess.execute(
                 select(Tickets).where(Tickets.user_id == user_id).where(Tickets.open == 1))
         return result.scalars().all()
+
 
 def get_all_tickets() -> ResultProxy:
     """Get all tickets."""
