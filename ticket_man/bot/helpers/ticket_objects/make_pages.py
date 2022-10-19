@@ -19,6 +19,7 @@ class TicketButtonsView(discord.ui.View):
         logger.debug(f"TicketButtonsView timed out for ticket {self.ticket_id}")
         await self.message.delete()
 
+
 class TicketsRefreshButton(discord.ui.Button):
     def __init__(self):
         super().__init__(style=discord.ButtonStyle.danger, label='Refresh', emoji='♻', custom_id='refresh')
@@ -98,6 +99,19 @@ async def make_embed(ticket, **kwargs):
     embed.add_field(name="Ticket Last Updated By",
                     value=f"{ticket.last_updated_by} ({user_distinct(last_updated_by_user)})", inline=False)
 
+    return embed
+
+
+async def make_comment_embed(comment, **kwargs):
+    bot: discord.Bot = kwargs.get('bot', None)
+    if bot is None:
+        raise ValueError('Bot is required to make embed')
+    author_user = await bot.get_or_fetch_user(comment.user_id)
+    embed = discord.Embed(title=f"Ticket Comment {comment.id}", color=0x00ff00)
+    embed.add_field(name="Comment ID", value=f"{comment.id}", inline=False)
+    embed.add_field(name="Comment Author", value=f"{comment.user_id} ({user_distinct(author_user)})", inline=False)
+    embed.add_field(name="Comment Content", value=f"{comment.content}", inline=False)
+    embed.add_field(name="Comment Created", value=f"{discord.utils.format_dt(comment.created, 'F')}", inline=False)
     return embed
 
 
