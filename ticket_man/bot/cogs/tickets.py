@@ -8,6 +8,7 @@ from discord.commands import SlashCommandGroup
 from discord import ApplicationContext, Embed, Permissions, default_permissions
 from discord.ext.pages import Page, Paginator
 
+from ticket_man.bot.helpers import is_server_owner
 from ticket_man.bot.helpers.db_abbrevs import \
     add_test_tickets, close_ticket, get_all_open_tickets, get_last_5_tickets_by_user, get_latest_ticket, \
     get_ticket, get_user_ticket, open_ticket, delete_ticket, get_ticket_comment, \
@@ -62,7 +63,7 @@ class Tickets(Cog):
             await ctx.respond(f"You don't have any open tickets!")
             return
 
-        closed = close_ticket(ticket)
+        closed = close_ticket(ticket.id)
         if closed:
             await ctx.respond(f"Closed ticket {ticket.id}")
 
@@ -83,25 +84,30 @@ class Tickets(Cog):
         paginator = Paginator(pages=pages, timeout=60)
         await paginator.respond(ctx.interaction, ephemeral=True)
 
-    @ticket_admin.command(name="delete", description="Delete a ticket.")
+    @ticket.command(name="delete", description="Delete a ticket.")
     async def ticket_delete(self, ctx: ApplicationContext, ticket_id: int):
         """Delete a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
         ticket = get_ticket(ticket_id)
-        if ticket.user_id != ctx.author.id:
-            await ctx.respond("You cannot delete a ticket that is not yours.")
-            return
-        else:
-            if ticket is None:
-                await ctx.respond("Ticket not found.")
+        if ticket is not None:
+            if ticket.user_id != ctx.author.id:
+                await ctx.respond("You cannot delete a ticket that is not yours.")
                 return
             else:
-                await ctx.respond(view=TicketDeleteButton(ticket_id))
+                deleted = delete_ticket(ticket.id)
+                if deleted:
+                    await ctx.respond(f"Deleted ticket {ticket.id}")
+        else:
+            await ctx.respond(f"Ticket {ticket_id} not found")
+            return
 
     @ticket_admin.command(name="list", description="List all open tickets.")
     @default_permissions(administrator=True)
     async def ticket_admin_list(self, ctx: ApplicationContext):
         """List all open tickets."""
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         await ctx.defer(ephemeral=False)
         tickets = get_all_open_tickets()
         if tickets is None:
@@ -122,13 +128,31 @@ class Tickets(Cog):
     async def ticket_admin_close(self, ctx: ApplicationContext, ticket_id: int):
         """Close a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         ticket = close_ticket(ticket_id)
+
+    @ticket_admin.command(name="delete", description="Delete a ticket.")
+    @default_permissions(administrator=True)
+    async def ticket_admin_delete(self, ctx: ApplicationContext, ticket_id: int):
+        """Delete a ticket (open or closed)"""
+        await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
+        deleted = delete_ticket(ticket_id)
+        if deleted:
+            await ctx.respond(f"Deleted ticket {ticket_id}")
 
     @ticket_admin.command(name="comment", description="Add a comment to a ticket.")
     @default_permissions(administrator=True)
     async def ticket_admin_comment(self, ctx: ApplicationContext):
         """Add a comment to a ticket."""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         await ctx.respond("This command is not yet implemented.")
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
@@ -136,6 +160,9 @@ class Tickets(Cog):
     async def ticket_admin_open(self, ctx: ApplicationContext, ticket_id: int):
         """Open a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         ticket = open_ticket(ticket_id)
         await ctx.respond(f"Ticket {ticket.id} (re)opened.")
 
@@ -144,6 +171,9 @@ class Tickets(Cog):
     async def ticket_admin_edit(self, ctx: ApplicationContext, ticket_id: int):
         """Edit a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         await ctx.respond("This command is not yet implemented.")
 
     @ticket_admin.command(name="addtesttickets", description="Add test tickets.")
@@ -151,6 +181,9 @@ class Tickets(Cog):
     async def ticket_admin_addtest(self, ctx: ApplicationContext):
         """Add test tickets."""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         await add_test_tickets()
 
     @ticket_admin.command(name="view", description="View a ticket.")
@@ -158,6 +191,9 @@ class Tickets(Cog):
     async def ticket_admin_view(self, ctx: ApplicationContext, ticket_id: int):
         """View a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         ticket = get_ticket(ticket_id)
         if ticket is None:
             await ctx.respond("Ticket not found.")
@@ -172,13 +208,36 @@ class Tickets(Cog):
     async def ticket_admin_view_comments(self, ctx: ApplicationContext, ticket_id: int):
         """View comments on a ticket (open or closed)"""
         await ctx.defer(ephemeral=True)
-        await ctx.respond("This command is not yet implemented.")
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
+        ticket = get_ticket(ticket_id)
+        if ticket is None:
+            await ctx.respond("Ticket not found.")
+            return
+        else:
+            comments = get_ticket_comments(ticket_id)
+            if comments is None:
+                await ctx.respond("No comments found.")
+                return
+            else:
+                pages = []
+                first_page = discord.Embed(title=f"Comments for Ticket {ticket_id}", timestamp=arw.now('US/Eastern').datetime,
+                                           description="All comments are listed on the following pages.")
+                pages.append(Page(embeds=[first_page]))
+                for comment in comments:
+                    pages.append(Page(embeds=[await make_comment_embed(comment)]))
+                pager = Paginator(pages=pages)
+                await pager.respond(ctx.interaction, ephemeral=False)
 
     @ticket_admin.command(name="list_closed", description="List all closed tickets.")
     @default_permissions(administrator=True)
     async def ticket_admin_list_closed(self, ctx: ApplicationContext):
         """List all closed tickets."""
         await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
         await ctx.respond("This command is not yet implemented.")
 
     @Cog.listener()
