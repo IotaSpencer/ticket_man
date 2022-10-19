@@ -69,7 +69,7 @@ def delete_comment(comment_id: int) -> ResultProxy | Result | FrozenResult:
 def close_ticket(ticket_id: int) -> bool:
     """Close a ticket."""
     with session() as sess:  # type: Session
-        ticket = sess.execute(update(Tickets).where(Tickets.id == ticket_id).values(open=0)).scalar_one()
+        ticket = sess.execute(update(Tickets).where(Tickets.id == ticket_id).values(open=0))
         sess.commit()
         return True
 
@@ -135,14 +135,15 @@ def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultP
 
 
 def get_latest_ticket(user_id: int):
-    """Get the latest ticket submitted by a user."""
+    """Get the latest open ticket submitted by a user."""
     with session() as sess:
         result = sess.execute(
                 select(Tickets).
                 where(Tickets.user_id == user_id).
+                where(Tickets.open == 1).
                 order_by(Tickets.id.desc()).
                 limit(1))
-        return result.scalars().all()
+        return result.scalars().first()
 
 
 def get_last_5_tickets_by_user(user_id: int) -> list[Row]:
