@@ -1,6 +1,6 @@
 import discord
 from discord.ext.pages import Page, Paginator
-
+import arrow as arw
 from ticket_man.bot.helpers.db_abbrevs import close_ticket, delete_ticket, get_all_open_tickets, open_ticket
 from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
@@ -106,12 +106,12 @@ async def make_comment_embed(comment, **kwargs):
     bot: discord.Bot = kwargs.get('bot', None)
     if bot is None:
         raise ValueError('Bot is required to make embed')
+    timestamp = arw.get(comment.timestamp, 'utc').to('local').datetime
     author_user = await bot.get_or_fetch_user(comment.user_id)
-    embed = discord.Embed(title=f"Ticket Comment {comment.id}", color=0x00ff00)
-    embed.add_field(name="Comment ID", value=f"{comment.id}", inline=False)
-    embed.add_field(name="Comment Author", value=f"{comment.user_id} ({user_distinct(author_user)})", inline=False)
-    embed.add_field(name="Comment Content", value=f"{comment.content}", inline=False)
-    embed.add_field(name="Comment Created", value=f"{discord.utils.format_dt(comment.created, 'F')}", inline=False)
+    embed = discord.Embed(title=f"Comment #{comment.id} from {comment.user_id} ({user_distinct(author_user)})", color=0x00ff00)
+    embed.add_field(name="\u200b", value=f"{comment.content}", inline=False)
+    embed.add_field(name="\u200b", value="\u200b", inline=False)
+    embed.timestamp = timestamp
     return embed
 
 
