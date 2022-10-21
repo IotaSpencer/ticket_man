@@ -19,7 +19,8 @@ from ticket_man.bot.helpers.db_abbrevs import \
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
-from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_embed, \
+from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_comment_embed, \
+    make_embed, \
     make_view
 from ticket_man.loggers import logger
 
@@ -217,7 +218,7 @@ class Tickets(Cog):
             return
         else:
             comments = get_ticket_comments(ticket_id)
-            if comments is None:
+            if comments() is None:
                 await ctx.respond("No comments found.")
                 return
             else:
@@ -225,10 +226,10 @@ class Tickets(Cog):
                 first_page = discord.Embed(title=f"Comments for Ticket {ticket_id}", timestamp=arw.now('US/Eastern').datetime,
                                            description="All comments are listed on the following pages.")
                 pages.append(Page(embeds=[first_page]))
-                for comment in comments:
-                    pages.append(Page(embeds=[await make_comment_embed(comment)]))
+                for comment in comments().scalars().all():
+                    pages.append(Page(embeds=[await make_comment_embed(comment, bot=ctx.bot)]))
                 pager = Paginator(pages=pages)
-                await pager.respond(ctx.interaction, ephemeral=False)
+                await pager.respond(ctx.interaction, ephemeral=True)
 
     @ticket_admin.command(name="list_closed", description="List all closed tickets.")
     @default_permissions(administrator=True)
