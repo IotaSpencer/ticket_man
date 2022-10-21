@@ -119,11 +119,10 @@ def get_user_ticket(ticket_id: int, user_id: int) -> list:
         return result.scalars().all()
 
 
-def get_ticket_comments(ticket_id: int) -> Result:
+def get_ticket_comments(ticket_id: int) -> FrozenResult:
     with session() as sess:
         result: Result = sess.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id))
-        return result
-
+        return result.freeze()
 
 def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultProxy | Result | FrozenResult:
     """Get a comment submitted by a user."""
