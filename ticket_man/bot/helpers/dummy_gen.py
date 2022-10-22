@@ -21,10 +21,10 @@ class DummyGen:
         self.session = None
         self.para = kwargs.pop('para', 1)
         self.para_len = kwargs.pop('para_len', 'short')
-        self.plain = kwargs.pop('plaintext', True)
+        self.plain = kwargs.pop('plain', 'plaintext')
 
     async def init_session(self):
-        self.session = aiohttp.ClientSession()
+        self.session = aiohttp.ClientSession("https://loripsum.net")
 
     async def get_response(self, para=None, para_len=None, plain=None):
         if not self.session:
@@ -34,6 +34,8 @@ class DummyGen:
         if para_len is None:
             para_len = self.para_len
         if plain is None:
-            plain = self.plain
+            plain = ''
+        else:
+            plain = 'plaintext'
         async with self.session.get(f"/api/{para}/{para_len}/{plain}") as resp:
             return await resp.text()
