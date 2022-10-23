@@ -1,6 +1,34 @@
+from collections import namedtuple
+from dataclasses import dataclass
+from typing import TypedDict
+
 import aiohttp
 import asyncio
+@dataclass
+class Users:
+    tag: str
+    id: int
+    admin: bool
 
+    users = []
+
+    def __init__(self, tag, id, admin):
+        self.tag = tag
+        self.id = id
+        self.admin = admin
+
+    def add_user(self, user):
+        self.tag = user.tag
+        self.id = user.id
+        self.admin = user.admin
+Users.add_user
+
+        "tag": "IotaSpencer#0001",
+        "id": 234093061045616642
+    },
+    {morgs  # 0920 (crypto1324)  - 201063045491851264}
+    GameWizard(neko(mtf)) - 316002085369937920
+    UNICORPSE  # 5899 (axel 🦊) - 364190414254637069
 
 class DummyGen:
 

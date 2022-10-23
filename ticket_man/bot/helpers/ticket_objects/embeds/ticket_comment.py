@@ -18,7 +18,7 @@ class TicketCommentModal(discord.ui.Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await submit_comment(self.children[0].value, self.extra_kwargs["ticket_id"], interaction.user.id)
+        submit_comment(self.children[0].value, self.extra_kwargs["ticket_id"], interaction.user.id)
         their_embed = discord.Embed(
                 title="Comment Submitted",
                 description="Your comment has been submitted. Please wait for a staff member to respond.",

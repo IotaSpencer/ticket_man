@@ -239,7 +239,7 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        await ctx.respond("This command is not yet implemented.")
+        tickets = get_closed_tickets()
 
     @Cog.listener()
     async def on_ready(self):
