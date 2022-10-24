@@ -1,3 +1,6 @@
 /venv/
 /.idea/
 /ticket_man.egg-info/
+/discord.log
+/.fleet/run.json
+/.fleet/settings.json
