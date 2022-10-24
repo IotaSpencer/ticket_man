@@ -1,34 +1,16 @@
-from collections import namedtuple
-from dataclasses import dataclass
-from typing import TypedDict
-
 import aiohttp
-import asyncio
-@dataclass
-class Users:
-    tag: str
-    id: int
-    admin: bool
 
+from ticket_man.utils import dotdict
+
+
+def user_data():
     users = []
-
-    def __init__(self, tag, id, admin):
-        self.tag = tag
-        self.id = id
-        self.admin = admin
-
-    def add_user(self, user):
-        self.tag = user.tag
-        self.id = user.id
-        self.admin = user.admin
-Users.add_user
-
-        "tag": "IotaSpencer#0001",
-        "id": 234093061045616642
-    },
-    {morgs  # 0920 (crypto1324)  - 201063045491851264}
-    GameWizard(neko(mtf)) - 316002085369937920
-    UNICORPSE  # 5899 (axel 🦊) - 364190414254637069
+    admin = []
+    users.append(dotdict({"tag": "morgs#0920", "id": 201063045491851264, "admin": False, "name": "crypto1324"}))
+    admin.append(dotdict({"tag": "IotaSpencer#0001", "id": 234093061045616642, "admin": True, "name": "iotaspencer"}))
+    users.append(dotdict({"tag": "GameWizard13#8485", "name": "neko(mtf)", "id": 316002085369937920, "admin": False}))
+    users.append(dotdict({"tag": "UNICORPSE#5899", "name": "axel 🦊", "id": 364190414254637069, "admin": False}))
+    return users, admin
 
 class DummyGen:
 
