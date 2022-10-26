@@ -23,6 +23,13 @@ def get_all_open_tickets() -> FrozenResult | Result:
         return result.scalars().all()
 
 
+def get_all_closed_tickets() -> FrozenResult | Result:
+    """Get all closed tickets."""
+    with session() as sess:
+        result: Result = sess.execute(select(Tickets).where(Tickets.open == 0))
+        return result.scalars().all()
+
+
 def get_all_user_open_tickets(user_id: int) -> FrozenResult | Result:
     """Get all open tickets submitted by a user."""
     with session() as sess:

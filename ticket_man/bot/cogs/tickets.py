@@ -10,10 +10,12 @@ from discord.ext.pages import Page, Paginator
 
 from ticket_man.bot.helpers import is_server_owner
 from ticket_man.bot.helpers.db_abbrevs import \
-    add_test_tickets, close_ticket, get_all_open_tickets, get_last_5_tickets_by_user, get_latest_ticket, \
+    add_test_comments, add_test_tickets, close_ticket, get_all_open_tickets, get_last_5_tickets_by_user, \
+    get_latest_ticket, \
     get_ticket, get_user_ticket, open_ticket, delete_ticket, get_ticket_comment, \
     get_ticket_comments, get_all_ticket_comments, get_all_user_tickets, \
     get_all_comments, get_all_tickets, get_all_user_open_tickets
+from ticket_man.bot.helpers.db_funcs import get_all_closed_tickets
 
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
@@ -148,13 +150,13 @@ class Tickets(Cog):
 
     @ticket_admin.command(name="comment", description="Add a comment to a ticket.")
     @default_permissions(administrator=True)
-    async def ticket_admin_comment(self, ctx: ApplicationContext):
+    async def ticket_admin_comment(self, ctx: ApplicationContext, ticket_id: int):
         """Add a comment to a ticket."""
         await ctx.defer(ephemeral=True)
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        await ctx.respond("This command is not yet implemented.")
+        await ctx.respond(view=CommentTicketView(ticket_id=ticket_id))
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
     @default_permissions(administrator=True)
@@ -186,6 +188,16 @@ class Tickets(Cog):
             await ctx.respond("You must be the server owner to use this command.")
             return
         await add_test_tickets()
+
+    @ticket_admin.command(name="addtestcomments", description="Add test comments.")
+    @default_permissions(administrator=True)
+    async def ticket_admin_addtestcomments(self, ctx: ApplicationContext):
+        """Add test comments."""
+        await ctx.defer(ephemeral=True)
+        if not await is_server_owner(ctx):
+            await ctx.respond("You must be the server owner to use this command.")
+            return
+        add_test_comments()
 
     @ticket_admin.command(name="view", description="View a ticket.")
     @default_permissions(administrator=True)
@@ -223,7 +235,8 @@ class Tickets(Cog):
                 return
             else:
                 pages = []
-                first_page = discord.Embed(title=f"Comments for Ticket {ticket_id}", timestamp=arw.now('US/Eastern').datetime,
+                first_page = discord.Embed(title=f"Comments for Ticket {ticket_id}",
+                                           timestamp=arw.now('US/Eastern').datetime,
                                            description="All comments are listed on the following pages.")
                 pages.append(Page(embeds=[first_page]))
                 for comment in comments().scalars().all():
@@ -239,11 +252,19 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        tickets = get_closed_tickets()
-
-    @Cog.listener()
-    async def on_ready(self):
-        logger.info(f'{self.ext_path} loaded successfully.')
+        tickets = get_all_closed_tickets()
+        if tickets is None:
+            await ctx.respond("No closed tickets found.")
+            return
+        else:
+            pages = []
+            first_page = discord.Embed(title="Closed Tickets", timestamp=arw.now('US/Eastern').datetime,
+                                       description="All closed tickets are listed on the following pages.")
+            pages.append(Page(embeds=[first_page]))
+            for ticket in tickets:
+                pages.append(Page(embeds=[await make_embed(ticket, bot=ctx.bot)]))
+            pager = Paginator(pages=pages)
+            await pager.respond(ctx.interaction, ephemeral=True)
 
 
 def setup(bot):

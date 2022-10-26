@@ -6,10 +6,47 @@ from ticket_man.utils import dotdict
 def user_data():
     users = []
     admin = []
-    users.append(dotdict({"tag": "morgs#0920", "id": 201063045491851264, "admin": False, "name": "crypto1324"}))
-    admin.append(dotdict({"tag": "IotaSpencer#0001", "id": 234093061045616642, "admin": True, "name": "iotaspencer"}))
-    users.append(dotdict({"tag": "GameWizard13#8485", "name": "neko(mtf)", "id": 316002085369937920, "admin": False}))
-    users.append(dotdict({"tag": "UNICORPSE#5899", "name": "axel 🦊", "id": 364190414254637069, "admin": False}))
+    # add ticket ids into dict
+    users.append(dotdict({
+        "tag": "morgs#0920",
+        "id": 201063045491851264,
+        "ticket_id": 1,
+        "admin": False,
+        "name": "crypto1324"
+    }))
+    admin.append(dotdict({
+        "tag": "IotaSpencer#0001",
+        "id": 234093061045616642,
+        "admin": True,
+        "name": "iotaspencer"
+    }))
+    users.append(dotdict({
+        "tag": "GameWizard13#8485",
+        "name": "neko(mtf)",
+        "id": 316002085369937920,
+        "ticket_id": 15,
+        "admin": False
+    }))
+    users.append(dotdict({
+        "tag": "UNICORPSE#5899",
+        "name": "axel 🦊",
+        "id": 364190414254637069,
+        "admin": False
+    }))
+    users.append(dotdict({
+        "tag": "Hermän2000#9583",
+        "name": "Hermän2000",
+        "id": 326738183184318464,
+        "ticket_id": 5,
+        "admin": False
+    }))
+    users.append(dotdict({
+        "tag": "IotaTest#9473",
+        "name": "IotaTest",
+        "id": 934701743743324180,
+        "ticket_id": 203,
+        "admin": False
+    }))
     return users, admin
 
 class DummyGen:

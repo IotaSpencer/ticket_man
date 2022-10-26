@@ -38,5 +38,14 @@ class TicketCommentModal(discord.ui.Modal):
         await ticket_channel.send(embeds=[our_embed])
 
 
-class CommentTicketView:
-    pass
+class CommentTicketView(discord.ui.View):
+    def __init__(self, ticket_id):
+        super().__init__(timeout=20)
+        self.ticket_id = ticket_id
+
+    async def button_callback(self, interaction: discord.Interaction):
+        await interaction.response.send_message(embed=discord.Embed(
+                title="Comment",
+                description="Please enter your comment below.",
+                color=discord.Color.blue(),
+        ), view=TicketCommentModal(extra_kwargs={"ticket_id": self.ticket_id}))

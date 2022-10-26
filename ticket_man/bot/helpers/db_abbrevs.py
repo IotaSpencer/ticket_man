@@ -1,5 +1,5 @@
 import random
-import dummy_gen
+from . import dummy_gen
 from .db_funcs import *
 
 
@@ -23,12 +23,16 @@ def add_test_tickets():
 def add_test_comments():
     """Add test comments to the database."""
     with session() as sess:
-        for i in range(30):
-            user_choice = random.choice(*dummy_gen.user_data()[0])
-            user_id = user_choice.id
-            ticket_id = random.randint(1, 100)
-            comment = TicketComments(content=f"Test Comment {i}", ticket_id=ticket_id, user_id=user_id)
+        for i in range(31):
+            user_choice = random.choice(dummy_gen.user_data()[0])
+            admin_choice = random.choice(dummy_gen.user_data()[1])
+            user_id, ticket_id = user_choice.id, user_choice.ticket_id
+            admin_id = admin_choice.id
+            pass_ = random.randint(10000000000000000000, 99999999999999999999)
+            admin_comment = TicketComments(content=f"Test Admin Comment {pass_}", ticket_id=ticket_id, user_id=admin_id)
+            comment = TicketComments(content=f"Test User Comment {pass_}", ticket_id=ticket_id, user_id=user_id)
+            sess.add(admin_comment)
             sess.add(comment)
 
-        sess.commit()
+        # sess.commit()
         return True

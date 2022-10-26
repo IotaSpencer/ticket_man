@@ -4,7 +4,6 @@ import arrow as arw
 from ticket_man.bot.helpers.db_abbrevs import close_ticket, delete_ticket, get_all_open_tickets, open_ticket
 from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
-from ticket_man.config import Configs
 
 
 class TicketButtonsView(discord.ui.View):
@@ -27,7 +26,7 @@ class TicketsRefreshButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer()
         pages = []
-        tickets = await get_all_open_tickets()
+        tickets = get_all_open_tickets()
         for ticket in tickets:
             pages.append(Page(embeds=[await make_embed(ticket)], custom_view=make_view(ticket)))
 
@@ -47,7 +46,7 @@ class TicketDeleteButton(discord.ui.Button):
         await interaction.response.send_message('Ticket deleted', ephemeral=True)
         logger.info(
                 f"Ticket {self.ticket_id} deleted by {interaction.user.name}#{interaction.user.discriminator} ({interaction.user.id})")
-        await delete_ticket(self.ticket_id)
+        delete_ticket(self.ticket_id)
         await interaction.delete_original_message(delay=2.0)
 
 
@@ -61,9 +60,13 @@ class TicketCloseButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.delete_original_response(delay=2.0)
-        fticket = close_ticket(self.ticket_id)
-        ticket = fticket.one()
-        return await interaction.response.send_message(f"Ticket {ticket.id} closed", ephemeral=True)
+        closed_ticket = close_ticket(self.ticket_id)
+        if closed_ticket:
+            await interaction.response.send_message(f"Ticket {self.ticket_id} closed", ephemeral=True)
+            logger.info(
+                    f"Ticket {self.ticket_id} closed by {interaction.user.name}#{interaction.user.discriminator} ({interaction.user.id})")
+        else:
+            await interaction.response.send_message(f"Ticket {self.ticket_id} already closed", ephemeral=True)
 
 
 class TicketOpenButton(discord.ui.Button):
@@ -74,7 +77,7 @@ class TicketOpenButton(discord.ui.Button):
                          **kwargs)
 
     async def callback(self, interaction: discord.Interaction):
-        ticket = await open_ticket(self.ticket_id)
+        ticket = open_ticket(self.ticket_id)
         await interaction.response.send_message(f"Ticket {ticket.id} reopened", ephemeral=True)
         await interaction.delete_original_message(delay=2.0)
         return ticket
@@ -108,7 +111,8 @@ async def make_comment_embed(comment, **kwargs):
         raise ValueError('Bot is required to make embed')
     timestamp = arw.get(comment.timestamp, 'utc').to('local').datetime
     author_user = await bot.get_or_fetch_user(comment.user_id)
-    embed = discord.Embed(title=f"Comment #{comment.id} from {comment.user_id} ({user_distinct(author_user)})", color=0x00ff00)
+    embed = discord.Embed(title=f"Comment #{comment.id} from {comment.user_id} ({user_distinct(author_user)})",
+                          color=0x00ff00)
     embed.add_field(name="\u200b", value=f"{comment.content}", inline=False)
     embed.add_field(name="\u200b", value="\u200b", inline=False)
     embed.timestamp = timestamp
