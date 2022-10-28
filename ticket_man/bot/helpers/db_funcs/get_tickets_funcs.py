@@ -56,8 +56,11 @@ def get_all_ticket_comments(user_id: int, ticket_id: int) -> ResultProxy:
     """Get all comments submitted by a user on a ticket."""
     with session() as sess:
         result: Result = sess.execute(
-                select(TicketComments).where(TicketComments.ticket_id == ticket_id).where(
-                        TicketComments.user_id == user_id))
+                select(TicketComments)
+                .where(TicketComments.ticket_id == ticket_id)
+                .where(TicketComments.user_id == user_id)
+                .order_by(TicketComments.timestamp.desc())
+        )
         return result.scalars().all()
 
 
@@ -87,11 +90,17 @@ def get_user_ticket(ticket_id: int, user_id: int) -> list:
 
 
 def get_ticket_comments(ticket_id: int) -> FrozenResult:
+    """Get all comments on a ticket (the youngest first) ."""
     with session() as sess:
-        result: Result = sess.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id))
+        result: Result = sess.execute(select(TicketComments).where(TicketComments.ticket_id == ticket_id).order_by(TicketComments.timestamp.desc()))
         return result.freeze()
 
 
+def get_ticket_user_id(ticket_id: int) -> int:
+    """Get the user ID of a ticket."""
+    with session() as sess:
+        result: Result = sess.execute(select(Tickets.user_id).where(Tickets.id == ticket_id))
+        return result.scalars().first()
 def get_ticket_comment(user_id: int, ticket_id: int, comment_id: int) -> ResultProxy | Result | FrozenResult:
     """Get a comment submitted by a user."""
     with session() as sess:

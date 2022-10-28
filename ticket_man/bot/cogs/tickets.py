@@ -16,6 +16,7 @@ from ticket_man.bot.helpers.db_abbrevs import \
     get_ticket_comments, get_all_ticket_comments, get_all_user_tickets, \
     get_all_comments, get_all_tickets, get_all_user_open_tickets
 from ticket_man.bot.helpers.db_funcs import get_all_closed_tickets
+from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_comment import TicketAdminCommentModal
 
 # local
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
@@ -152,11 +153,10 @@ class Tickets(Cog):
     @default_permissions(administrator=True)
     async def ticket_admin_comment(self, ctx: ApplicationContext, ticket_id: int):
         """Add a comment to a ticket."""
-        await ctx.defer(ephemeral=True)
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        await ctx.respond(view=CommentTicketView(ticket_id=ticket_id))
+        await ctx.send_modal(TicketAdminCommentModal(title=f"Adding comment to {ticket_id}.", extra_kwargs={'ticket_id': ticket_id, 'bot': ctx.bot}))
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
     @default_permissions(administrator=True)
@@ -198,6 +198,7 @@ class Tickets(Cog):
             await ctx.respond("You must be the server owner to use this command.")
             return
         add_test_comments()
+        await ctx.respond("Added test comments.")
 
     @ticket_admin.command(name="view", description="View a ticket.")
     @default_permissions(administrator=True)

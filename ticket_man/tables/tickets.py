@@ -24,9 +24,6 @@ class Tickets(Base):
 
     )
 
-    comments = relationship('TicketComments', primaryjoin='Tickets.id==TicketComments.ticket_id',
-                            order_by='TicketComments.timestamp', back_populates='ticket')
-
 
 class TicketTypes(Base):
     __table__ = Table(
@@ -50,4 +47,3 @@ class TicketComments(Base):
             # Column('content', String),
             autoload_with=db.db_engine,
     )
-    ticket = relationship('Tickets', back_populates='comments')
