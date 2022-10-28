@@ -34,5 +34,5 @@ def add_test_comments():
             sess.add(admin_comment)
             sess.add(comment)
 
-        # sess.commit()
+        sess.commit()
         return True
