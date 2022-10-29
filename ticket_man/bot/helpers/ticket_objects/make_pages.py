@@ -2,6 +2,7 @@ import discord
 from discord.ext.pages import Page, Paginator
 import arrow as arw
 from ticket_man.bot.helpers.db_abbrevs import close_ticket, delete_ticket, get_all_open_tickets, open_ticket
+from ticket_man.bot.helpers.db_funcs import get_all_comments, get_all_ticket_comments, get_ticket
 from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
 
@@ -13,10 +14,32 @@ class TicketButtonsView(discord.ui.View):
         self.add_item(TicketCloseButton(ticket_id=ticket_id))
         self.add_item(TicketDeleteButton(ticket_id=ticket_id))
         self.add_item(TicketOpenButton(ticket_id=ticket_id))
+        ticket = get_ticket(ticket_id)
+        if get_all_ticket_comments(ticket.user_id, ticket_id):
+            self.add_item(TicketCommentsButton(ticket_id=ticket_id))
 
     async def on_timeout(self) -> None:
         logger.debug(f"TicketButtonsView timed out for ticket {self.ticket_id}")
         await self.message.delete()
+
+
+class TicketCommentsButton(discord.ui.Button):
+    def __init__(self, **kwargs):
+        self.ticket_id = kwargs.pop("ticket_id")
+        self.user_id = kwargs.pop("user_id")
+        super().__init__(label="Comments", style=discord.ButtonStyle.blurple, emoji="📝", **kwargs)
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        pages = []
+        first_page = discord.Embed(title=f"Comments for Ticket {self.ticket_id}",
+                                   timestamp=arw.now('US/Eastern').datetime,
+                                   description="All comments are listed on the following pages.")
+        pages.append(Page(embeds=[first_page]))
+        for comment in get_all_ticket_comments().scalars().all():
+            pages.append(Page(embeds=[await make_comment_embed(comment, bot=interaction.client)]))
+        pager = Paginator(pages=pages)
+        await pager.respond(interaction, ephemeral=True)
 
 
 class TicketsRefreshButton(discord.ui.Button):

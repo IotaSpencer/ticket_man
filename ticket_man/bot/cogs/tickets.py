@@ -213,10 +213,8 @@ class Tickets(Cog):
             await ctx.respond("Ticket not found.")
             return
         else:
-            page = ticket
-            paginator = Paginator([])
-            paginator.pages.append(Page(embeds=[await make_embed(ticket)], custom_view=make_view(ticket)))
-
+            paginator = Paginator(pages=[Page(embeds=[await make_embed(ticket, bot=ctx.bot)], custom_view=make_view(ticket))])
+            await paginator.respond(ctx.interaction, ephemeral=False)
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
     async def ticket_admin_view_comments(self, ctx: ApplicationContext, ticket_id: int):

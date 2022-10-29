@@ -70,7 +70,7 @@ def get_ticket(ticket_id: int) -> Result:
     with session() as sess:
         logger.info(f"Session: {session}")
         result: Result = sess.execute(select(Tickets).where(Tickets.id == ticket_id))
-        return result
+        return result.scalar_one()
 
 
 def get_ticket_comment_by_id(comment_id: int) -> Result:
