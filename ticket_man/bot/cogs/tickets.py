@@ -156,6 +156,7 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
+
         await ctx.send_modal(TicketAdminCommentModal(title=f"Adding comment to {ticket_id}.", extra_kwargs={'ticket_id': ticket_id, 'bot': ctx.bot}))
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
