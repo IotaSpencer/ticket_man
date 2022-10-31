@@ -23,7 +23,10 @@ class Tickets(Base):
             autoload_with=db.db_engine,
 
     )
-    comments = relationship("TicketComments", back_populates="ticket", order_by="TicketComments.timestamp")
+    comments = relationship("TicketComments",
+                            order_by="TicketComments.timestamp",
+                            primaryjoin="Tickets.id == TicketComments.ticket_id",
+                            foreign_keys="TicketComments.ticket_id")
 
 
 class TicketTypes(Base):
@@ -48,4 +51,3 @@ class TicketComments(Base):
             # Column('content', String),
             autoload_with=db.db_engine,
     )
-    ticket = relationship("Tickets", back_populates="comments")

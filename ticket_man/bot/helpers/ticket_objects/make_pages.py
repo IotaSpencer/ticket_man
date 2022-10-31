@@ -3,6 +3,7 @@ from discord.ext.pages import Page, Paginator
 import arrow as arw
 from ticket_man.bot.helpers.db_abbrevs import close_ticket, delete_ticket, get_all_open_tickets, open_ticket
 from ticket_man.bot.helpers.db_funcs import get_all_comments, get_all_ticket_comments, get_ticket
+from ticket_man.bot.helpers.db_funcs.db_bools import has_comments
 from ticket_man.bot.helpers.discord_helpers import user_distinct
 from ticket_man.loggers import logger
 
@@ -15,8 +16,10 @@ class TicketButtonsView(discord.ui.View):
         self.add_item(TicketDeleteButton(ticket_id=ticket_id))
         self.add_item(TicketOpenButton(ticket_id=ticket_id))
         ticket = get_ticket(ticket_id)
-        if get_all_ticket_comments(ticket.user_id, ticket_id):
+        if has_comments(ticket_id):
             self.add_item(TicketCommentsButton(ticket_id=ticket_id))
+        else:
+            self.message.edit(embed=discord.Embed(title=f"Ticket {ticket_id} has no comments."))
 
     async def on_timeout(self) -> None:
         logger.debug(f"TicketButtonsView timed out for ticket {self.ticket_id}")

@@ -16,6 +16,7 @@ from ticket_man.bot.helpers.db_abbrevs import \
     get_ticket_comments, get_all_ticket_comments, get_all_user_tickets, \
     get_all_comments, get_all_tickets, get_all_user_open_tickets
 from ticket_man.bot.helpers.db_funcs import get_all_closed_tickets
+from ticket_man.bot.helpers.db_funcs.db_bools import has_comments
 from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_comment import TicketAdminCommentModal
 
 # local
@@ -156,7 +157,6 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-
         await ctx.send_modal(TicketAdminCommentModal(title=f"Adding comment to {ticket_id}.", extra_kwargs={'ticket_id': ticket_id, 'bot': ctx.bot}))
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
