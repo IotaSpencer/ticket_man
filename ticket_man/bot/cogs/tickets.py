@@ -17,12 +17,12 @@ from ticket_man.bot.helpers.db_abbrevs import \
     get_all_comments, get_all_tickets, get_all_user_open_tickets
 from ticket_man.bot.helpers.db_funcs import get_all_closed_tickets
 from ticket_man.bot.helpers.db_funcs.db_bools import has_comments
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_admin_comment import TicketAdminCommentModal
+from ticket_man.bot.helpers.ticket_objects.views.ticket_admin_comment import TicketAdminCommentModal
+from ticket_man.bot.helpers.ticket_objects.views.ticket_admin_edit import TicketAdminEditView
 
 # local
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_comment import CommentTicketView
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_submit import TicketSubmitView
-from ticket_man.bot.helpers.ticket_objects.embeds.ticket_view import ViewTicketEmbed
+from ticket_man.bot.helpers.ticket_objects.views.ticket_comment import CommentTicketView
+from ticket_man.bot.helpers.ticket_objects.views.ticket_submit import TicketSubmitView
 from ticket_man.bot.helpers.ticket_objects.make_pages import TicketCloseButton, TicketDeleteButton, make_comment_embed, \
     make_embed, \
     make_view
@@ -42,7 +42,7 @@ class Tickets(Cog):
     async def ticket_create(self, ctx: ApplicationContext):
         await ctx.defer(ephemeral=True)
         tickets = get_all_user_open_tickets(ctx.author.id)
-        if len(tickets) > 0:
+        if len(tickets()) > 0:
             await ctx.respond(f"You already have an open ticket! Please close it before opening a new one.",
                               ephemeral=True)
             return
@@ -178,7 +178,12 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        await ctx.respond("This command is not yet implemented.")
+        ticket = get_ticket(ticket_id)
+        if ticket is None:
+            await ctx.respond(f"Ticket {ticket_id} not found.")
+            return
+        await ctx.send(f"Editing ticket {ticket_id}.", view=TicketAdminEditView(extra_kwargs={"ticket_id": ticket_id}))
+
 
     @ticket_admin.command(name="addtesttickets", description="Add test tickets.")
     @default_permissions(administrator=True)
