@@ -157,7 +157,8 @@ class Tickets(Cog):
         if not await is_server_owner(ctx):
             await ctx.respond("You must be the server owner to use this command.")
             return
-        await ctx.send_modal(TicketAdminCommentModal(title=f"Adding comment to {ticket_id}.", extra_kwargs={'ticket_id': ticket_id, 'bot': ctx.bot}))
+        await ctx.send_modal(TicketAdminCommentModal(title=f"Adding comment to {ticket_id}.",
+                                                     extra_kwargs={'ticket_id': ticket_id, 'bot': ctx.bot}))
 
     @ticket_admin.command(name="open", description="ReOpen a ticket.")
     @default_permissions(administrator=True)
@@ -182,8 +183,11 @@ class Tickets(Cog):
         if ticket is None:
             await ctx.respond(f"Ticket {ticket_id} not found.")
             return
-        await ctx.send(f"Editing ticket {ticket_id}.", view=TicketAdminEditView(extra_kwargs={"ticket_id": ticket_id}))
-
+        await ctx.respond(
+            f"Please note, command must be used once per field.  If you want to edit multiple fields, you must "
+            f"run the command multiple times.", ephemeral=True, delete_after=20)
+        await ctx.respond(f"Editing ticket {ticket_id}.",
+                          view=TicketAdminEditView(extra_kwargs={"ticket_id": ticket_id}), ephemeral=True)
 
     @ticket_admin.command(name="addtesttickets", description="Add test tickets.")
     @default_permissions(administrator=True)
@@ -219,8 +223,10 @@ class Tickets(Cog):
             await ctx.respond("Ticket not found.")
             return
         else:
-            paginator = Paginator(pages=[Page(embeds=[await make_embed(ticket, bot=ctx.bot)], custom_view=make_view(ticket))])
+            paginator = Paginator(
+                    pages=[Page(embeds=[await make_embed(ticket, bot=ctx.bot)], custom_view=make_view(ticket))])
             await paginator.respond(ctx.interaction, ephemeral=False)
+
     @ticket_admin.command(name="view_comments", description="View a ticket's comments.")
     @default_permissions(administrator=True)
     async def ticket_admin_view_comments(self, ctx: ApplicationContext, ticket_id: int):

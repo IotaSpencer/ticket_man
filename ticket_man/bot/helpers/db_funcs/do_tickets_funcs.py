@@ -1,5 +1,6 @@
 from typing import Any
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 import arrow as arw
@@ -81,3 +82,15 @@ def close_latest_ticket(user_id: int) -> Result:
         ticket.open = 0
         sess.commit()
         return ticket
+
+
+def edit_ticket(ticket_id: int, column: str, value: str) -> Result | bool:
+    """Edit a ticket."""
+    try:
+        with session() as sess:
+            result: Result = sess.execute(update(Tickets).where(Tickets.id == ticket_id).values({f"{column}": value}))
+            sess.commit()
+        return result
+    except SQLAlchemyError as e:
+        print(e)
+        return False
