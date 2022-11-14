@@ -1,5 +1,6 @@
 import discord
 from discord import EmbedField
+from discord.ui import Item
 
 from ticket_man.bot.helpers.db_abbrevs import get_ticket_type, submit_ticket
 
@@ -45,6 +46,27 @@ class SubmitTicketModal(discord.ui.Modal):
 
 
 class TicketSubmitView(discord.ui.View):
+
+    def __init__(
+            self,
+            *items: Item,
+            timeout: float | None = 180.0,
+            disable_on_timeout: bool = False,
+    ):
+        super().__init__()
+        self.extra_kwargs = None
+
+    @discord.ui.select(
+            placeholder="Select the project you need help with.",
+            options=[
+                discord.SelectOption(label="AgeBot", value="1"),
+                discord.SelectOption(label="AgeBot (Beta)", value="2"),
+                discord.SelectOption(label="TicketMan", value="3"),
+
+                ])
+    async def project_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.extra_kwargs['project'] = select.values[0]
+
     @discord.ui.select(
         placeholder="Ticket Type",
         min_values=1,
@@ -55,8 +77,9 @@ class TicketSubmitView(discord.ui.View):
             discord.SelectOption(label="Support Request", value="3", emoji="🤔"),
         ],
     )
-    async def select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
-        modal = SubmitTicketModal(title="Other Support", extra_kwargs={"type_": select.values[0]})
+    async def type_select_callback(self, select: discord.ui.Select, interaction: discord.Interaction):
+        self.extra_kwargs['type_'] = select.values[0]
+        modal = SubmitTicketModal(title="Other Support", extra_kwargs={"type_": select.values[0], "project": select.values[0]})
         type_row = get_ticket_type(int(select.values[0]))
         modal.title = type_row.type_name
         await interaction.response.send_modal(modal)

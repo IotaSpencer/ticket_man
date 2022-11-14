@@ -12,9 +12,9 @@ from ticket_man.db import session
 from ticket_man.tables.tickets import TicketComments, Tickets
 
 
-def submit_ticket(subject: str, content: str, type_: int, user_id: int) -> ResultProxy:
+def submit_ticket(subject: str, content: str, type_: int, user_id: int, project: int) -> ResultProxy:
     with session() as sess:
-        ticket = Tickets(subject=subject, content=content, type=type_, user_id=user_id, open=1, last_updated_by=user_id,
+        ticket = Tickets(subject=subject, project=project, content=content, type=type_, user_id=user_id, open=1, last_updated_by=user_id,
                          created=arw.now('US/Eastern').datetime, last_updated=arw.now('US/Eastern').datetime)
         sess.add(ticket)
         sess.commit()
